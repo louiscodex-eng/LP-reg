@@ -63,7 +63,7 @@ const [pdfUrl, setPdfUrl] = useState(null);
       dob,
       email,
       phoneNumber: phone,
-      nin,
+      NationalId:nin,
       gender,
       maritalStatus,
       state,
