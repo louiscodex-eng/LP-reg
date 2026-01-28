@@ -142,7 +142,7 @@ const [pdfUrl, setPdfUrl] = useState(null);
   </h5>
 
   <div className="text-center mb-4">
-    <a href="#">Register</a> | <a href="#">Login</a>
+    <h6>Register|Login</h6>
   </div>
 </div>
       <div className="card shadow-sm mx-auto" style={{ maxWidth: "900px" }}>
