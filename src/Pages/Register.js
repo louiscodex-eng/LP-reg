@@ -7,7 +7,6 @@ import nigeriaLgaWards from "../data/nigeriaStatesLgaWards.json";
 function Register() {
   // ===== Personal Details =====
   const [firstName, setFirstName] = useState("");
-  const [isNigerianCitizen, setIsNigerianCitizen] = useState("");
   const [middleName, setMiddleName] = useState("");
   const [lastName, setLastName] = useState("");
   const [dob, setDob] = useState("");
@@ -17,7 +16,6 @@ function Register() {
   const [gender, setGender] = useState("");
   const [maritalStatus, setMaritalStatus] = useState("");
   const [loading, setLoading] = useState(false);
-const [pdfUrl, setPdfUrl] = useState(null);
 const [isCitizen, setIsCitizen] = useState("");
 const [country, setCountry] = useState("");
 
