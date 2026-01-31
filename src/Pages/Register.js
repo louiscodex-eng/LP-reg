@@ -36,23 +36,23 @@ const [country, setCountry] = useState("");
 
 
   //======Helper Functions ======
-  function base64ToBlob(base64, contentType = "application/pdf") {
-  const byteCharacters = atob(base64);
-  const byteArrays = [];
+  // function base64ToBlob(base64, contentType = "application/pdf") {
+  // const byteCharacters = atob(base64);
+  // const byteArrays = [];
 
-  for (let offset = 0; offset < byteCharacters.length; offset += 512) {
-    const slice = byteCharacters.slice(offset, offset + 512);
-    const byteNumbers = new Array(slice.length);
+  // for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+  //   const slice = byteCharacters.slice(offset, offset + 512);
+  //   const byteNumbers = new Array(slice.length);
 
-    for (let i = 0; i < slice.length; i++) {
-      byteNumbers[i] = slice.charCodeAt(i);
-    }
+  //   for (let i = 0; i < slice.length; i++) {
+  //     byteNumbers[i] = slice.charCodeAt(i);
+  //   }
 
-    byteArrays.push(new Uint8Array(byteNumbers));
-  }
+  //   byteArrays.push(new Uint8Array(byteNumbers));
+  // }
 
-  return new Blob(byteArrays, { type: contentType });
-}
+//   return new Blob(byteArrays, { type: contentType });
+// }
 
   // ===== Submit Function =====
   const handleSubmit = async (e) => {
@@ -93,7 +93,7 @@ const [country, setCountry] = useState("");
       throw new Error("Registration failed");
     }
 
-    const data = await response.json();
+   // const data = await response.json();
 
     // 🔑 Convert Base64 → PDF
     // const pdfBlob = base64ToBlob(data.pdfBase64);
