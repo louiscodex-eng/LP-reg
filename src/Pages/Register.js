@@ -78,8 +78,6 @@ const [country, setCountry] = useState("");
       isVoters,
       isMembershipApplied,
       country: "Nigeria",
-      username,
-      password,
     };
 
     const response = await fetch(
@@ -103,8 +101,8 @@ const [country, setCountry] = useState("");
     const pdfBlob = base64ToBlob(data.pdfBase64);
     const pdfObjectUrl = URL.createObjectURL(pdfBlob);
 
-    setPdfUrl(pdfObjectUrl);
-    alert("Registration successful! PDF generated.");
+    // setPdfUrl(pdfObjectUrl);
+    // alert("Registration successful! PDF generated.");
 
   } catch (error) {
     console.error(error);
