@@ -33,8 +33,7 @@ const [country, setCountry] = useState("");
     const [isVoters, setVoters] = useState("");
 
   // ===== Account Info =====
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+
 
   //======Helper Functions ======
   function base64ToBlob(base64, contentType = "application/pdf") {
