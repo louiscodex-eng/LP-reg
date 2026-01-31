@@ -26,9 +26,9 @@ const [country, setCountry] = useState("");
   const [lga, setLga] = useState("");
   const [state,setState] = useState("");
   const [agreed, setAgreed] = useState(false);
-  const [city, setCity] = useState("");
+  // const [city, setCity] = useState("");
   const [ward, setWard] = useState("");
-  const [isNigerian, setIsNigerian] = useState("");
+  // const [isNigerian, setIsNigerian] = useState("");
     const [isMembershipApplied, setIsMembershipApplied] = useState("");
     const [isVoters, setVoters] = useState("");
 
@@ -98,8 +98,8 @@ const [country, setCountry] = useState("");
     const data = await response.json();
 
     // 🔑 Convert Base64 → PDF
-    const pdfBlob = base64ToBlob(data.pdfBase64);
-    const pdfObjectUrl = URL.createObjectURL(pdfBlob);
+    // const pdfBlob = base64ToBlob(data.pdfBase64);
+    // const pdfObjectUrl = URL.createObjectURL(pdfBlob);
 
     // setPdfUrl(pdfObjectUrl);
     // alert("Registration successful! PDF generated.");
