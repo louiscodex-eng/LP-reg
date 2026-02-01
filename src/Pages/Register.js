@@ -365,7 +365,7 @@ useEffect(() => {
                     required
                   >
                     <option value="">
-                      Select state of residence
+                      Select country of residence
                     </option>
                     <option>Nigeria</option>
                     <option>Other Country</option>
