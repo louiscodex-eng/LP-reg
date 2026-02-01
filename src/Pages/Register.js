@@ -178,25 +178,14 @@ return (
                   onChange={(e) => setMiddleName(e.target.value)}
                 />
               </div>
+              </div>
+            <div className="row g-3 mb-3">
               <div className="col-md-6">
                 <input
                   className="form-control"
                   placeholder="Last Name"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            {/* DOB & Email */}
-            <div className="row g-3 mb-3">
-              <div className="col-md-6">
-                <input
-                  type="date"
-                  className="form-control"
-                  value={dob}
-                  onChange={(e) => setDob(e.target.value)}
                   required
                 />
               </div>
@@ -210,6 +199,26 @@ return (
                   required
                 />
               </div>
+            </div>
+
+            {/* DOB & Email */}
+            <div className="row g-3 mb-3">
+            
+              <div className="col-md-6">
+  <label className="form-label fw-medium">
+    Date of Birth
+  </label>
+
+  <input
+    type="date"
+    className="form-control"
+    value={dob}
+    onChange={(e) => setDob(e.target.value)}
+    required
+  />
+</div>
+
+              
             </div>
 
             {/* Phone & NIN */}
@@ -258,6 +267,9 @@ return (
                   <option value="">Marital Status</option>
                   <option>Single</option>
                   <option>Married</option>
+                  <option>Divorced</option>
+                  <option>Widow</option>
+                  <option>Widower</option>
                 </select>
               </div>
             </div>
@@ -277,7 +289,7 @@ return (
                   }}
                   required
                 >
-                  <option value="">Are you a Nigerian Citizen?</option>
+                  <option value="">Do you Residence in Nigeria?</option>
                   <option value="Yes">Yes</option>
                   <option value="No">No</option>
                 </select>
@@ -298,7 +310,7 @@ return (
                     }}
                     required
                   >
-                    <option value="">Select State</option>
+                    <option value="">Select State of origin</option>
                     {Object.keys(nigeriaStatesLGA).map((stateName) => (
                       <option key={stateName} value={stateName}>
                         {stateName}
@@ -380,6 +392,16 @@ return (
                   <option>Yes</option>
                   <option>No</option>
                 </select>
+                  {/* Country if not Nigerian */}
+            {isVoters === "Yes" && (
+              <div className="row g-3 mb-3">
+                <div className="col-md-6">
+                 <input
+                  className="form-control"
+                  placeholder="Enter Voter's Card No."/>
+                </div>
+              </div>
+            )}
               </div>
 
               <div className="col-md-6">
@@ -395,6 +417,18 @@ return (
                 </select>
               </div>
             </div>
+            {/* upload passport */}
+               <div className="mb-3">
+              <label className="form-label fw-bold">Upload Passport Photograph</label>
+              <input
+                type="file"
+                className="form-control"
+                accept="image/*"
+                // onChange={handlePassportUpload}
+                required
+              />
+            </div>
+
 
             {/* Terms */}
             <div className="mb-3">

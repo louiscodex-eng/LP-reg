@@ -1084,11 +1084,427 @@
       "Ueken",
       "Yeghe"
     ]
+  },
+  "Anambra": {
+    "Aguata": [
+      "Achina I",
+      "Achina II",
+      "Agulueze Chukwu",
+      "Akpo",
+      "Amesi",
+      "Ekwulobia I",
+      "Ekwulobia II",
+      "Ezinifite I",
+      "Ezinifite II",
+      "Igbo-Ukwu I",
+      "Igbo-Ukwu II",
+      "Ikenga",
+      "Isuofia",
+      "Nkpologwu",
+      "Oraeri",
+      "Uga I",
+      "Uga II",
+      "Umuchu I",
+      "Umuchu II",
+      "Umuona"
+    ],
+    "Ayamelum": [
+      "Anaku",
+      "Ifite Ogwari I",
+      "Ifite Ogwari II",
+      "Igbakwu",
+      "Omasi",
+      "Omor I",
+      "Omor II",
+      "Omor III",
+      "Umueje",
+      "Umumbo"
+    ],
+    "Anambra_East": [
+      "Aguleri I",
+      "Aguleri II",
+      "Enugwu-Otu",
+      "Eziagulu-Otu",
+      "Igbariam",
+      "Nando I",
+      "Nando II",
+      "Nando III",
+      "Nsugbe I",
+      "Nsugbe II",
+      "Otuocha I",
+      "Otuocha II",
+      "Umureli I",
+      "Umuleri II",
+      "Umuoba-Anam"
+    ],
+    "Anambra_West": [
+      "Ezi-Anam",
+      "Ifite-Anam",
+      "Nzam",
+      "Olumbanasa-Ode",
+      "Olumbanasa-Inoma",
+      "Oroma Etiti-Anam",
+      "Umuenwelum-Anam",
+      "Umueze-Anam I",
+      "Umueze-Anam II",
+      "Umuoba-Anam"
+    ],
+    "Anaocha": [
+      "Neni I",
+      "Neni II",
+      "Agulu I",
+      "Agulu II",
+      "Adazi-Ani",
+      "Adazi-Enu",
+      "Amalla",
+      "Igboukwu I",
+      "Igboukwu II",
+      "Umuonaga",
+      "Umuona"
+    ],
+    "Awka_North": [
+      "Achalla I",
+      "Achalla II",
+      "Amansea",
+      "Amanuke",
+      "Awba-Ofemmili",
+      "Ebenebe I",
+      "Ebenebe II",
+      "Ebenebe III"
+    ],
+    "Awka_South": [
+      "Awka I",
+      "Awka II",
+      "Amawbia I",
+      "Amawbia II",
+      "Isiagu",
+      "Umuokpu",
+      "Nibo",
+      "Okpuno"
+    ],
+    "Dunukofia": [
+      "Ukpo I",
+      "Ukpo II",
+      "Umunnachi",
+      "Nkwelle Ezunaka",
+      "Ogbunike",
+      "Umudioka",
+      "Ifitedunu",
+      "Ozubulu",
+      "Enugwu Ukwu",
+      "Umuchu"
+    ],
+    "Ekwusigo": [
+      "Ozubulu I",
+      "Ozubulu II",
+      "Oraifite I",
+      "Oraifite II",
+      "Ichi",
+      "Ochanja",
+      "Uruagu I",
+      "Uruagu II",
+      "Uruagu III",
+      "Others"
+    ],
+    "Idemili_North": [
+      "Abatete I",
+      "Abatete II",
+      "Nkpor I",
+      "Nkpor II",
+      "Ogidi I",
+      "Ogidi II",
+      "Umuoji I",
+      "Umuoji II",
+      "Ezio-welle",
+      "Uke"
+    ],
+    "Idemili_South": [
+      "Nnobi I",
+      "Nnobi II",
+      "Ojoto",
+      "Uruagu",
+      "Other wards"
+    ],
+    "Ihiala": [
+      "Ihiala I",
+      "Ihiala II",
+      "Uzuakwa",
+      "Other wards"
+    ],
+    "Njikoka": [
+      "Abagana I",
+      "Abagana II",
+      "Other wards"
+    ],
+    "Nnewi_North": [
+      "Otolo",
+      "Uruagu",
+      "Umudim",
+      "Nnewichi",
+      "Other wards"
+    ],
+    "Nnewi_South": [
+      "Amichi I",
+      "Amichi II",
+      "Unubi",
+      "Other wards"
+    ],
+    "Ogbaru": [
+      "Atani I",
+      "Atani II",
+      "Other wards"
+    ],
+    "Onitsha_North": [
+      "American Quarters",
+      "G.R.A",
+      "Inland Town I",
+      "Inland Town II",
+      "Inland Town III",
+      "Inland Town IV",
+      "Inland Town V",
+      "Inland Town VI",
+      "Inland Town VII",
+      "Inland Town VIII",
+      "Ogbe Umuonica",
+      "Trans Nkisi",
+      "Water-Side Central I",
+      "Water-Side Central II",
+      "Woluwo Layout"
+    ],
+    "Onitsha_South": [
+      "Fegge I",
+      "Fegge II",
+      "Fegge III",
+      "Fegge IV",
+      "Odakpu I",
+      "Odakpu II",
+      "Odakpu III",
+      "Odakpu IV",
+      "Odakpu V",
+      "Odakpu VI"
+    ],
+    "Orumba_North": [
+      "Ajalli I",
+      "Ajalli II",
+      "Awlaw",
+      "Eziagu",
+      "Umulolo",
+      "Other wards"
+    ],
+    "Orumba_South": [
+      "Umunze I",
+      "Umunze II",
+      "Agbudu",
+      "Akpu",
+      "Enugu-Umonya",
+      "Other wards"
+    ],
+    "Oyi": [
+      "Nteje I",
+      "Nteje II",
+      "Other wards"
+    ]
+  },
+  
+  "Kogi_State": {
+    "Adavi": [
+      "Okunchi/Ozuri/Onieka",
+      "Ogaminana",
+      "Iruvucheba",
+      "Idanuhua",
+      "Adavi-Eba",
+      "Kuroko I",
+      "Kuroko II",
+      "Ino Ziomi/Ipaku/Osisi",
+      "Ikaraworo/Idobanyere",
+      "Nagazi Farm Centre",
+      "Ege/Iruvochinomi"
+    ],
+    "Ajaokuta": [
+      "Ebiya North",
+      "Ebiya South",
+      "Abodi/Patesi",
+      "Ichuwa/Upaja",
+      "Badoko",
+      "Ogigiri",
+      "Adogo",
+      "Achagana",
+      "Odonu/Unosi",
+      "Omgbo",
+      "Adogu/Apamira/Ogodo Uhuovene",
+      "Obangeode/Ohunene/Ukoko Inye",
+      "Old Ajaokuta",
+      "Ganaga/Township"
+    ],
+    "Ankpa": [
+      "Ankpa Township",
+      "Ankpa Suburb I",
+      "Ankpa Suburb II",
+      "Ankpa I",
+      "Ankpa II",
+      "Enjema I",
+      "Enjema II",
+      "Enjema III",
+      "Enjema IV",
+      "Ojoku I",
+      "Ojoku II",
+      "Ojoku III",
+      "Ojoku IV"
+    ],
+    "Bassa": [
+      "Akuba I",
+      "Akuba II",
+      "Ayede/Akakana",
+      "Ozongulo/Kpanche",
+      "Ikende",
+      "Gboloko",
+      "Kpata",
+      "Eforo",
+      "Mozum",
+      "Ozugbe"
+    ],
+    "Dekina": [
+      "Dekina Town",
+      "Iyale",
+      "Emewe",
+      "Odu I",
+      "Odu II",
+      "Abocho",
+      "Ogbabede",
+      "Adumu Egume",
+      "Ojikpadala",
+      "Anyigba",
+      "Okura Olafia",
+      "Ogane Inigu"
+    ],
+    "Ibaji": [],
+    "Idah": [],
+    "Igalamela/Odolu": [],
+    "Ijumu": [],
+    "Kabba/Bunu": [
+      "Asuta",
+      "Odo-Akete",
+      "Okekoko",
+      "Odolu",
+      "Aiyewa",
+      "AiyetEju",
+      "Otu",
+      "Egbeda",
+      "Okedayo",
+      "Akutupa-Kiri",
+      "Aiyetoro-Kiri",
+      "Iluke",
+      "Olle/Oke-Ofin",
+      "Odo-Ape",
+      "Okebukun"
+    ],
+    "Kogi_Koton-Karfe": [
+      "Ukwo-Kotonkarfe",
+      "Odaki-Kotonkarfe",
+      "Kotonkarfe South-East",
+      "Girinya",
+      "Irenodu",
+      "Akpasu",
+      "Tawari",
+      "Gegu-Beki North",
+      "Gegu-Beki South",
+      "Chikara North",
+      "Chikara South"
+    ],
+    "Lokoja": [],
+    "Mopa-Muro": [
+      "Odole-1",
+      "Odole-2",
+      "Ileteju-1",
+      "Ileteju-2",
+      "Okeagi/Ilai",
+      "Orokere",
+      "Takete Idde/Otafun",
+      "Aiyedayo/Aiyedaro",
+      "Agbafogun",
+      "Aiyede/Okagi"
+    ],
+    "Ofu": [
+      "Igo",
+      "Aloma",
+      "Ejule Allah",
+      "Itobe/Okokenyi",
+      "Ugwolawo-1",
+      "Ugwolawo-2",
+      "Aloji",
+      "Ofoke",
+      "Ochadamu",
+      "Ogbonicha",
+      "Iboko/Efakwu"
+    ],
+    "Ogori/Magongo": [
+      "Eni",
+      "Oshobane",
+      "Okibo",
+      "Okesi",
+      "Ileteju",
+      "Aiyeromi",
+      "Ugugu",
+      "Obinoyin",
+      "Obatgben",
+      "Oturu Opowuroye"
+    ],
+    "Okehi": [
+      "Obaiba I",
+      "Obaiba II",
+      "Okuehu",
+      "Ohueta",
+      "Oboroke Eba",
+      "Obaroke Uvete",
+      "Eika/Ohizenyi",
+      "Okaito/Usungwen",
+      "Ohuepe/Omavi UbOro",
+      "Obangede/Uhuodo",
+      "Oboroke Uvete II"
+    ],
+    "Okene": [],
+    "Olamaboro": [
+      "Imane I",
+      "Imane II",
+      "Ogugu I",
+      "Ogugu II",
+      "Ogugu III",
+      "Olamaboro I",
+      "Olamaboro II",
+      "Olamaboro III",
+      "Olamaboro IV",
+      "Olamaboro V"
+    ],
+    "Omala": [
+      "AbejukoI I",
+      "Abejuko I I",
+      "Opoda/Ofejiji",
+      "Bagana",
+      "Okpatala",
+      "Akpacha",
+      "Bagaji",
+      "Icheke Ajopachi",
+      "Ogodu",
+      "Oji-Aji",
+      "Olla"
+    ],
+    "Yagba_East": [
+      "Ife Olukotun I",
+      "Ife Olukotun II",
+      "Ponayan",
+      "Alu/Igbagun/Oranre",
+      "Ejuku",
+      "Jege/Oke/Agi Ogbom/Isao",
+      "Makutu I",
+      "Makutu II",
+      "Itedo",
+      "Ilafin/Idofin/Odo-Ogba"
+    ],
+    "Yagba_West": []
   }
 
 
-
-
-
 }
+
+
 
