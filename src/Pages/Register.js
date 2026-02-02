@@ -26,6 +26,7 @@ function Register() {
   const [agreed, setAgreed] = useState(false);
   const [isNigeria, setIsNigeria] = useState("");
   const [isVoters, setVoters] = useState("");
+  const [pdfUrl, setPdfUrl] = useState("");
 
   // ===== Wards Data =====
   const [wardsData, setWardsData] = useState({});
@@ -57,21 +58,31 @@ useEffect(() => {
 
     try {
       const payload = {
-        firstName,
-        middleName,
-        lastName,
-        dob,
-        email,
-        phoneNumber: phone,
-        NationalId: nin,
-        gender,
-        maritalStatus,
-        state,
-        lga,
-        ward,
-        isVoters,
-        country: "Nigeria",
-      };
+  firstName,
+  middleName,
+  lastName,
+  dob,
+  email,
+  phoneNumber: phone,
+  NationalId: nin,
+  gender,
+  maritalStatus,
+
+  // Residency
+  isCitizen,        // "Yes" or "No"
+  state: isCitizen === "Yes" ? state : null,
+  lga: isCitizen === "Yes" ? lga : null,
+  ward: isCitizen === "Yes" ? ward : null,
+
+  // Voting
+  isVoters,         // "Yes" or "No"
+
+  // Country logic
+  country:
+    isNigeria === "Nigeria"
+      ? "Nigeria"
+      : country,    // Ghana, UK, USA, etc.
+};
 
       const response = await fetch(
         "https://govtregistrationapi.onrender.com/api/Registration/register",
@@ -83,14 +94,41 @@ useEffect(() => {
       );
 
       if (!response.ok) throw new Error("Registration failed");
-      alert("Registration successful!");
-    } catch (error) {
-      console.error(error);
-      alert("Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
+  const data = await response.json();
+
+    // 🔑 Convert Base64 → PDF
+    const pdfBlob = base64ToBlob(data.pdfBase64);
+    const pdfObjectUrl = URL.createObjectURL(pdfBlob);
+
+    setPdfUrl(pdfObjectUrl);
+    alert("Registration successful! PDF generated.");
+
+  } catch (error) {
+    console.error(error);
+    alert("Something went wrong. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+function base64ToBlob(base64, contentType = "application/pdf") {
+  const byteCharacters = atob(base64);
+  const byteArrays = [];
+
+  for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+    const slice = byteCharacters.slice(offset, offset + 512);
+    const byteNumbers = new Array(slice.length);
+
+    for (let i = 0; i < slice.length; i++) {
+      byteNumbers[i] = slice.charCodeAt(i);
     }
-  };
+
+    byteArrays.push(new Uint8Array(byteNumbers));
+  }
+
+  return new Blob(byteArrays, { type: contentType });
+}
+
 
   return (
     <>
@@ -137,6 +175,7 @@ useEffect(() => {
               <h6 className="fw-bold mb-3">Personal Details</h6>
               <div className="row g-3 mb-3">
                 <div className="col-md-6">
+                  <label className="form-label fw-medium">FirstName</label>
                   <input
                     className="form-control"
                     placeholder="First Name"
@@ -146,6 +185,7 @@ useEffect(() => {
                   />
                 </div>
                 <div className="col-md-6">
+                  <label className="form-label fw-medium">Middle Name</label>
                   <input
                     className="form-control"
                     placeholder="Middle Name"
@@ -157,6 +197,7 @@ useEffect(() => {
 
               <div className="row g-3 mb-3">
                 <div className="col-md-6">
+                  <label className="form-label fw-medium">Last Name</label>
                   <input
                     className="form-control"
                     placeholder="Last Name"
@@ -166,6 +207,7 @@ useEffect(() => {
                   />
                 </div>
                 <div className="col-md-6">
+                  <label className="form-label fw-medium">Email Address</label>
                   <input
                     type="email"
                     className="form-control"
@@ -188,63 +230,8 @@ useEffect(() => {
                     required
                   />
                 </div>
-              </div>
-
-              <div className="row g-3 mb-3">
-                <div className="col-md-6">
-                  <input
-                    className="form-control"
-                    placeholder="Phone number"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="col-md-6">
-                  <input
-                    className="form-control"
-                    placeholder="National Identity Number"
-                    value={nin}
-                    onChange={(e) => setNin(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Gender & Marital Status */}
-              <div className="row g-3 mb-3">
-                <div className="col-md-6">
-                  <select
-                    className="form-select"
-                    value={gender}
-                    onChange={(e) => setGender(e.target.value)}
-                    required
-                  >
-                    <option value="">Gender</option>
-                    <option>Male</option>
-                    <option>Female</option>
-                  </select>
-                </div>
-                <div className="col-md-6">
-                  <select
-                    className="form-select"
-                    value={maritalStatus}
-                    onChange={(e) => setMaritalStatus(e.target.value)}
-                    required
-                  >
-                    <option value="">Marital Status</option>
-                    <option>Single</option>
-                    <option>Married</option>
-                    <option>Divorced</option>
-                    <option>Widow</option>
-                    <option>Widower</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Citizenship */}
-              <div className="row g-3 mb-3">
-                <div className="col-md-6">
+                 <div className="col-md-6">
+                  <label className="form-label fw-medium">Do you reside in Nigeria?</label>
                   <select
                     className="form-select"
                     value={isCitizen}
@@ -268,6 +255,7 @@ useEffect(() => {
               {isCitizen === "Yes" && (
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
+                    <label className="form-label fw-medium">State of Origin</label>
                     <select
                       className="form-select"
                       value={state}
@@ -288,6 +276,7 @@ useEffect(() => {
                   </div>
 
                   <div className="col-md-6">
+                    <label className="form-label fw-medium">Local Government Area (LGA)</label>
                     <select
                       className="form-select"
                       value={lga}
@@ -306,6 +295,7 @@ useEffect(() => {
                   </div>
 
                   <div className="col-md-6">
+                    <label className="form-label fw-medium">Ward</label>
                     <select
                       className="form-select"
                       value={ward}
@@ -328,11 +318,72 @@ useEffect(() => {
                   </div>
                 </div>
               )}
+          
 
+              <div className="row g-3 mb-3">
+                <div className="col-md-6">
+                  <label className="form-label fw-medium">Phone Number</label>
+                  <input
+                    className="form-control"
+                    placeholder="Phone number"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label fw-medium">National Identity Number(NIN)</label>
+                  <input
+                    className="form-control"
+                    placeholder="National Identity Number"
+                    value={nin}
+                    onChange={(e) => setNin(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Gender & Marital Status */}
+              <div className="row g-3 mb-3">
+                <div className="col-md-6">
+                  <label className="form-label fw-medium">Gender</label>
+                  <select
+                    className="form-select"
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                    required
+                  >
+                    <option value="">Gender</option>
+                    <option>Male</option>
+                    <option>Female</option>
+                  </select>
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label fw-medium">Marital Status</label>
+                  <select
+                    className="form-select"
+                    value={maritalStatus}
+                    onChange={(e) => setMaritalStatus(e.target.value)}
+                    required
+                  >
+                    <option value="">Marital Status</option>
+                    <option>Single</option>
+                    <option>Married</option>
+                    <option>Divorced</option>
+                    <option>Widow</option>
+                    <option>Widower</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Citizenship
+              <div className="row g-3 mb-3"> */}
+               
            
               {/* Voter & Membership */}
               <div className="row g-3 mb-3">
                 <div className="col-md-6">
+                  <label className="form-label fw-medium">Do you have a voters card?</label>
                   <select
                     className="form-select"
                     value={isVoters}
@@ -356,6 +407,7 @@ useEffect(() => {
                 </div>
 
                 <div className="col-md-6">
+                  <label className="form-label fw-medium">Country of Residence</label>
                   <select
                     className="form-select"
                     value={isNigeria}
@@ -377,6 +429,7 @@ useEffect(() => {
 {isNigeria === "Nigeria" && (
   <div className="row g-3 mb-3">
     <div className="col-md-6">
+      <label className="form-label fw-medium">State of Residence</label>
       <select
         className="form-select"
         value={state}
@@ -402,6 +455,7 @@ useEffect(() => {
 {isNigeria === "Other Country" && (
   <div className="row g-3 mb-3">
     <div className="col-md-6">
+      <label className="form-label fw-medium">Country of Residence</label>
       <select
         className="form-select"
         value={country}
@@ -458,7 +512,31 @@ useEffect(() => {
                 >
                   {loading ? "Submitting..." : "Register"}
                 </button>
+
+                {pdfUrl && (
+  <div className="mt-4">
+    <h5 className="fw-bold text-center">Your Membership PDF</h5>
+
+    <iframe
+      src={pdfUrl}
+      title="Membership PDF"
+      width="100%"
+      height="600px"
+      style={{ border: "1px solid #ccc" }}
+    />
+
+    <div className="d-grid mt-3">
+      <a href={pdfUrl} download="membership.pdf">
+        <button className="btn btn-primary">
+          Download PDF
+        </button>
+      </a>
+    </div>
+  </div>
+)}
+
               </div>
+
 
               <p className="text-muted small">
                 Note: This is a pre-membership registration form. You will be
