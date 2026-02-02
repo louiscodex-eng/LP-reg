@@ -27,6 +27,7 @@ function Register() {
   const [isNigeria, setIsNigeria] = useState("");
   const [isVoters, setVoters] = useState("");
   const [pdfUrl, setPdfUrl] = useState("");
+  const [passportFile, setPassportFile] = useState(null);
 
   // ===== Wards Data =====
   const [wardsData, setWardsData] = useState({});
@@ -52,57 +53,64 @@ useEffect(() => {
 
 
   // ===== Submit Function =====
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
 
-    try {
-      const payload = {
-  firstName,
-  middleName,
-  lastName,
-  dob,
-  email,
-  phoneNumber: phone,
-  NationalId: nin,
-  gender,
-  maritalStatus,
+  try {
+    const formData = new FormData();
 
-  // Residency
-  isCitizen,        // "Yes" or "No"
-  state: isCitizen === "Yes" ? state : null,
-  lga: isCitizen === "Yes" ? lga : null,
-  ward: isCitizen === "Yes" ? ward : null,
+    // ===== Personal Details =====
+    formData.append("FirstName", firstName);
+    formData.append("MiddleName", middleName);
+    formData.append("LastName", lastName);
+    formData.append("DOB", dob);
+    formData.append("Email", email);
+    formData.append("PhoneNumber", phone);
+    formData.append("NationalId", nin);
+    formData.append("Gender", gender);
+    formData.append("MaritalStatus", maritalStatus);
 
-  // Voting
-  isVoters,         // "Yes" or "No"
+    // ===== Residency =====
+    formData.append("IsCitizen", isCitizen);
+    formData.append("State", isCitizen === "Yes" ? state : "");
+    formData.append("LGA", isCitizen === "Yes" ? lga : "");
+    formData.append("Ward", isCitizen === "Yes" ? ward : "");
 
-  // Country logic
-  country:
-    isNigeria === "Nigeria"
-      ? "Nigeria"
-      : country,    // Ghana, UK, USA, etc.
-};
+    // ===== Voting =====
+    formData.append("IsVoters", isVoters);
 
-      const response = await fetch(
-        "https://govtregistrationapi.onrender.com/api/Registration/register",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
+    // ===== Country =====
+    formData.append(
+      "Country",
+      isNigeria === "Nigeria" ? "Nigeria" : country
+    );
 
-      if (!response.ok) throw new Error("Registration failed");
-  const data = await response.json();
+    // ===== Passport Upload =====
+    if (passportFile) {
+      formData.append("passport", passportFile); // MUST match backend param
+    }
 
-    // 🔑 Convert Base64 → PDF
+    const response = await fetch(
+      "https://govtregistrationapi.onrender.com/api/Registration/register",
+      {
+        method: "POST",
+        body: formData, // ❗ NO headers
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Registration failed");
+    }
+
+    const data = await response.json();
+
+    // ===== Convert Base64 PDF to Blob =====
     const pdfBlob = base64ToBlob(data.pdfBase64);
     const pdfObjectUrl = URL.createObjectURL(pdfBlob);
 
     setPdfUrl(pdfObjectUrl);
-    alert("Registration successful! PDF generated.");
-
+    alert("Registration successful! ID card generated.");
   } catch (error) {
     console.error(error);
     alert("Something went wrong. Please try again.");
@@ -110,6 +118,7 @@ useEffect(() => {
     setLoading(false);
   }
 };
+
 
 function base64ToBlob(base64, contentType = "application/pdf") {
   const byteCharacters = atob(base64);
@@ -479,11 +488,13 @@ function base64ToBlob(base64, contentType = "application/pdf") {
                   Upload Passport Photograph
                 </label>
                 <input
-                  type="file"
+                    type="file"
                   className="form-control"
-                  accept="image/*"
-                  required
-                />
+                accept="image/*"
+                onChange={(e) => setPassportFile(e.target.files[0])}
+                      required
+                   />
+
               </div>
 
               {/* Terms */}
