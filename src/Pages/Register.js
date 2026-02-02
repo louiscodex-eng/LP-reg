@@ -18,6 +18,7 @@ function Register() {
   const [loading, setLoading] = useState(false);
   const [isCitizen, setIsCitizen] = useState("");
   const [country, setCountry] = useState("");
+  const [residenceState, setResidenceState] = useState("");
 
   // ===== Other Details =====
   const [lga, setLga] = useState("");
@@ -95,7 +96,7 @@ useEffect(() => {
       "https://govtregistrationapi.onrender.com/api/Registration/register",
       {
         method: "POST",
-        body: formData, // ❗ NO headers
+        body: formData, 
       }
     );
 
@@ -441,9 +442,9 @@ function base64ToBlob(base64, contentType = "application/pdf") {
       <label className="form-label fw-medium">State of Residence</label>
       <select
         className="form-select"
-        value={state}
+        value={residenceState}
         onChange={(e) => {
-          setState(e.target.value);
+          setResidenceState(e.target.value);
           setLga("");
           setWard("");
         }}
