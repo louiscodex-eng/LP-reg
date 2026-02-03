@@ -8,7 +8,7 @@ import Navbar from "../components/Navbar";
 import IDCard from "../components/IDCard";
 import onlyStates from "../data/onlyStates";
 
-function Register() {
+function UpdateDetails() {
   // ===== Personal Details =====
   const [firstName, setFirstName] = useState("");
   const [middleName, setMiddleName] = useState("");
@@ -24,6 +24,8 @@ function Register() {
   const [country, setCountry] = useState("");
   const [residenceState, setResidenceState] = useState("");
   const [registeredUser, setRegisteredUser] = useState(null);
+  const [profile, setProfile] = useState(null);
+
 
   // ===== Other Details =====
   const [lga, setLga] = useState("");
@@ -54,129 +56,108 @@ function Register() {
     setLoadingWards(false);
   }, []);
 
+  const fetchMyProfile = async () => {
+  setLoading(true);
+
+  try {
+    const token = localStorage.getItem("token");
+    const regId = localStorage.getItem("regId");
+
+    if (!token || !regId) {
+      throw new Error("User not authenticated");
+    }
+
+    const response = await fetch(
+      "https://govtregistrationapi.onrender.com/api/Registration/my-profile",
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to fetch profile");
+    }
+
+    setProfile(data);
+  } catch (error) {
+    toast.error(error.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
+useEffect(() => {
+  fetchMyProfile();
+}, []);
+
+const handleChange = (e) => {
+  const { name, value } = e.target;
+  setFormData({ ...formData, [name]: value });
+};
+
+const [formData, setFormData] = useState({
+  regID: "",
+  firstName: "",
+  middleName: "",
+  lastName: "",
+  dob: "",
+  email: "",
+  phoneNumber: "",
+  nationalId: "",
+  gender: "",
+  maritalStatus: "",
+  isCitizen: "",
+  state: "",
+  lga: "",
+  ward: "",
+  isVoters: "",
+  country: "",
+  passportUrl: "",
+});
+useEffect(() => {
+  if (profile) {
+    setFormData({
+      ...profile,
+      dob: profile.dob?.split("T")[0], // fix date input
+    });
+  }
+}, [profile]);
+
+
   // ===== Submit Function =====
-  const handleSubmit = async (e) => {
+  const handleUpdate = async (e) => {
     e.preventDefault();
     setLoading(true);
-
-    // Debug: Log gender and marital status before sending
-    console.log("Gender before submit:", gender);
-    console.log("Marital Status before submit:", maritalStatus);
-
-    // Validate gender and marital status
-    if (!gender || gender === "") {
-      toast.error("Please select a gender", {
-        position: "top-right",
-        autoClose: 3000,
-      });
-      setLoading(false);
-      return;
-    }
-
-    if (!maritalStatus || maritalStatus === "") {
-      toast.error("Please select a marital status", {
-        position: "top-right",
-        autoClose: 3000,
-      });
-      setLoading(false);
-      return;
-    }
-
+  
     try {
-      const formData = new FormData();
-
-      // ===== Personal Details =====
-      formData.append("FirstName", firstName);
-      formData.append("MiddleName", middleName);
-      formData.append("LastName", lastName);
-      formData.append("DOB", dob);
-      formData.append("Email", email);
-      formData.append("PhoneNumber", phone);
-      formData.append("NationalId", nin);
-      
-      // ===== FIXED: Ensure gender and marital status are sent =====
-      formData.append("Gender", gender);
-      formData.append("MaritalStatus", maritalStatus);
-
-      // ===== Residency =====
-      formData.append("IsCitizen", isCitizen);
-      formData.append("State", isCitizen === "Yes" ? state : "");
-      formData.append("LGA", isCitizen === "Yes" ? lga : "");
-      formData.append("Ward", isCitizen === "Yes" ? ward : "");
-
-      // ===== Voting =====
-      formData.append("IsVoters", isVoters);
-      if (isVoters === "Yes" && votersCardNo) {
-        formData.append("VotersCardNo", votersCardNo);
-      }
-
-      // ===== Country of Residence =====
-      formData.append("Country", isNigeria === "Nigeria" ? "Nigeria" : country);
-      
-      // ===== State of Residence =====
-      if (isNigeria === "Nigeria" && residenceState) {
-        formData.append("ResidenceState", residenceState);
-      }
-
-      // ===== Passport Upload =====
-      if (passportFile) {
-        formData.append("passport", passportFile);
-      }
-
-      // Debug: Log what's being sent
-      console.log("FormData contents:");
-      for (let [key, value] of formData.entries()) {
-        console.log(`${key}:`, value);
-      }
-
+      const token = localStorage.getItem("token");
+  
       const response = await fetch(
-        "https://govtregistrationapi.onrender.com/api/Registration/register",
+        "https://govtregistrationapi.onrender.com/api/Registration/update-profile",
         {
-          method: "POST",
-          body: formData,
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(formData),
         }
       );
-
+  
       const data = await response.json();
-
-      if (response.ok) {
-        // ===== SUCCESS TOAST =====
-        toast.success(
-          "Registration successful! Kindly download your membership card below. Dont forget to reset your password",
-          {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-          }
-        );
-
-        setRegisteredUser(data.data);
-      } else {
-        // ===== ERROR TOAST =====
-        toast.error(data.message || "Something went wrong, try again", {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
+  
+      if (!response.ok) {
+        throw new Error(data.message || "Update failed");
       }
+  
+      toast.success(data.message || "Profile updated successfully 🎉");
     } catch (error) {
-      console.error("Error during registration:", error);
-      
-      // ===== NETWORK ERROR TOAST =====
-      toast.error("Something went wrong, try again", {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
@@ -184,7 +165,7 @@ function Register() {
 
   return (
     <>
-      <Navbar active="register" />
+      <Navbar active="update-details" />
       
       {/* Toast Container - Required for notifications */}
       <ToastContainer />
@@ -198,7 +179,7 @@ function Register() {
             style={{ maxHeight: "120px" }}
           />
           <h3 className="fw-bold mb-1">Labour Party</h3>
-          <h5 className="text-muted mb-3">Membership Registration Form</h5>
+          <h5 className="text-muted mb-3">Update Details</h5>
         </div>
 
         <div
@@ -223,9 +204,13 @@ function Register() {
               backgroundPosition: "center",
             }}
           />
-
+ {loading && (
+  <div className="d-flex justify-content-center align-items-center vh-100">
+    <div className="spinner-border text-primary" style={{ width: 80, height: 80 }} />
+  </div>
+)}
           <div className="card-body position-relative" style={{ zIndex: 1 }}>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleUpdate}>
               {/* Personal Details */}
               <h6 className="fw-bold mb-3">Personal Details</h6>
               <div className="row g-3 mb-3">
@@ -234,8 +219,8 @@ function Register() {
                   <input
                     className="form-control"
                     placeholder="First Name"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({...formData, firstName: e.target.value})}
                     required
                   />
                 </div>
@@ -244,8 +229,8 @@ function Register() {
                   <input
                     className="form-control"
                     placeholder="Middle Name"
-                    value={middleName}
-                    onChange={(e) => setMiddleName(e.target.value)}
+                    value={formData.middleName}
+                    onChange={(e) => setFormData({...formData, middleName: e.target.value})}
                   />
                 </div>
               </div>
@@ -256,8 +241,8 @@ function Register() {
                   <input
                     className="form-control"
                     placeholder="Last Name"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({...formData, lastName: e.target.value})}
                     required
                   />
                 </div>
@@ -267,8 +252,8 @@ function Register() {
                     type="email"
                     className="form-control"
                     placeholder="Email address"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
                     required
                   />
                 </div>
@@ -280,8 +265,8 @@ function Register() {
                   <input
                     type="date"
                     className="form-control"
-                    value={dob}
-                    onChange={(e) => setDob(e.target.value)}
+                    value={formData.dob}
+                    onChange={(e) => setFormData({...formData, dob: e.target.value})}
                     required
                   />
                 </div>
@@ -291,9 +276,9 @@ function Register() {
                   </label>
                   <select
                     className="form-select"
-                    value={isCitizen}
+                    value={formData.isCitizen}
                     onChange={(e) => {
-                      setIsCitizen(e.target.value);
+                      setFormData({...formData, isCitizen: e.target.value});
                       setState("");
                       setLga("");
                       setWard("");
@@ -315,9 +300,9 @@ function Register() {
                     <label className="form-label fw-medium">State of Origin</label>
                     <select
                       className="form-select"
-                      value={state}
+                      value={formData.state}
                       onChange={(e) => {
-                        setState(e.target.value);
+                        setFormData({...formData, state: e.target.value});
                         setLga("");
                         setWard("");
                       }}
@@ -338,14 +323,14 @@ function Register() {
                     </label>
                     <select
                       className="form-select"
-                      value={lga}
-                      onChange={(e) => setLga(e.target.value)}
-                      disabled={!state}
+                      value={formData.lga}
+                      onChange={(e) => setFormData({...formData, lga: e.target.value})}
+                      disabled={!formData.state}
                       required
                     >
                       <option value="">Select LGA</option>
-                      {state &&
-                        nigeriaStatesLGA[state].map((lgaName) => (
+                      {formData.state &&
+                        nigeriaStatesLGA[formData.state].map((lgaName) => (
                           <option key={lgaName} value={lgaName}>
                             {lgaName}
                           </option>
@@ -357,16 +342,16 @@ function Register() {
                     <label className="form-label fw-medium">Ward</label>
                     <select
                       className="form-select"
-                      value={ward}
-                      onChange={(e) => setWard(e.target.value)}
-                      disabled={!state || !lga || loadingWards}
+                      value={formData.ward}
+                      onChange={(e) => setFormData({...formData, ward: e.target.value})}
+                      disabled={!formData.state || !formData.lga || loadingWards}
                       required
                     >
                       <option value="">
                         {loadingWards ? "Loading wards..." : "Select Ward"}
                       </option>
-                      {state && lga && wardsData[state] && wardsData[state][lga]
-                        ? wardsData[state][lga].map((wardName) => (
+                      {formData.state && formData.lga && wardsData[formData.state] && wardsData[formData.state][formData.lga]
+                        ? wardsData[formData.state][formData.lga].map((wardName) => (
                             <option key={wardName} value={wardName}>
                               {wardName}
                             </option>
@@ -383,8 +368,8 @@ function Register() {
                   <input
                     className="form-control"
                     placeholder="Phone number"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    value={formData.phoneNumber}
+                    onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})}
                     required
                   />
                 </div>
@@ -395,8 +380,8 @@ function Register() {
                   <input
                     className="form-control"
                     placeholder="National Identity Number"
-                    value={nin}
-                    onChange={(e) => setNin(e.target.value)}
+                    value={formData.nationalId}
+                    onChange={(e) => setFormData({...formData, nationalId: e.target.value})}
                     required
                   />
                 </div>
@@ -408,11 +393,8 @@ function Register() {
                   <label className="form-label fw-medium">Gender *</label>
                   <select
                     className="form-select"
-                    value={gender}
-                    onChange={(e) => {
-                      console.log("Gender selected:", e.target.value);
-                      setGender(e.target.value);
-                    }}
+                    value={formData.gender}
+                    onChange={(e) => setFormData({...formData, gender: e.target.value})}
                     required
                   >
                     <option value="">Select Gender</option>
@@ -424,11 +406,8 @@ function Register() {
                   <label className="form-label fw-medium">Marital Status *</label>
                   <select
                     className="form-select"
-                    value={maritalStatus}
-                    onChange={(e) => {
-                      console.log("Marital Status selected:", e.target.value);
-                      setMaritalStatus(e.target.value);
-                    }}
+                    value={formData.maritalStatus}
+                    onChange={(e) => setFormData({...formData, maritalStatus: e.target.value})}
                     required
                   >
                     <option value="">Select Marital Status</option>
@@ -449,8 +428,8 @@ function Register() {
                   </label>
                   <select
                     className="form-select"
-                    value={isVoters}
-                    onChange={(e) => setVoters(e.target.value)}
+                    value={formData.isVoters}
+                    onChange={(e) => setFormData({...formData, isVoters: e.target.value})}
                     required
                   >
                     <option value="">Do you have a voters card?</option>
@@ -463,8 +442,8 @@ function Register() {
                   <label className="form-label fw-medium">Country of Residence</label>
                   <select
                     className="form-select"
-                    value={isNigeria}
-                    onChange={(e) => setIsNigeria(e.target.value)}
+                    value={formData.country}
+                    onChange={(e) => setFormData({...formData, country: e.target.value})}
                     required
                   >
                     <option value="">Select country of residence</option>
@@ -482,8 +461,8 @@ function Register() {
                     <input
                       className="form-control"
                       placeholder="Enter Voter's Card No."
-                      value={votersCardNo}
-                      onChange={(e) => setVotersCardNo(e.target.value)}
+                      value={formData.votersCardNo}
+                      onChange={(e) => setFormData({...formData, votersCardNo: e.target.value})}
                     />
                   </div>
                 </div>
@@ -496,8 +475,8 @@ function Register() {
                     <label className="form-label fw-medium">State of Residence</label>
                     <select
                       className="form-select"
-                      value={residenceState}
-                      onChange={(e) => setResidenceState(e.target.value)}
+                      value={formData.residenceState}
+                      onChange={(e) => setFormData({...formData, residenceState: e.target.value})}
                       required
                     >
                       <option value="">Select State</option>
@@ -518,8 +497,8 @@ function Register() {
                     <label className="form-label fw-medium">Country of Residence</label>
                     <select
                       className="form-select"
-                      value={country}
-                      onChange={(e) => setCountry(e.target.value)}
+                      value={formData.countryOfResidence}
+                      onChange={(e) => setFormData({...formData, countryOfResidence: e.target.value})}
                       required
                     >
                       <option value="">Select your Country</option>
@@ -578,10 +557,10 @@ function Register() {
                         role="status"
                         aria-hidden="true"
                       ></span>
-                      Submitting...
+                      Updating,Please Wait...
                     </>
                   ) : (
-                    "Register"
+                    "Update Details"
                   )}
                 </button>
               </div>
@@ -606,4 +585,4 @@ function Register() {
   );
 }
 
-export default Register;
+export default UpdateDetails;

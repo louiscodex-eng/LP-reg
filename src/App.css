@@ -47,3 +47,104 @@
     transform: rotate(360deg);
   }
 }
+
+/* id card design */
+
+.id-card {
+  width: 420px;
+  height: 265px;
+  border: 3px solid #0a7f00;
+  border-radius: 10px;
+  padding: 12px;
+  background: repeating-linear-gradient(
+    45deg,
+    #f4fff6,
+    #f4fff6 10px,
+    #ecf8ef 10px,
+    #ecf8ef 20px
+  );
+  font-family: Arial, sans-serif;
+}
+
+/* HEADER */
+.id-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.id-logo {
+  width: 45px;
+}
+
+.id-title {
+  text-align: center;
+  flex-grow: 1;
+}
+
+.id-title h6 {
+  margin: 0;
+  font-weight: bold;
+  color: #0a7f00;
+}
+
+.id-title small {
+  font-size: 11px;
+  color: #333;
+}
+
+#id-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35); /* 👈 adjust opacity here */
+  z-index: 1;
+}
+
+#id-content {
+  position: relative;
+  z-index: 2;
+}
+/* BODY */
+.id-content {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.id-details {
+  width: 65%;
+  font-size: 11px;
+}
+
+.id-details .row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.id-details span:first-child {
+  font-weight: bold;
+  color: #0a7f00;
+}
+
+/* PASSPORT */
+.passport-wrapper {
+  width: 30%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.passport {
+  width: 80px;
+  height: 95px;
+  object-fit: cover;
+  border: 2px solid #0a7f00;
+  border-radius: 4px;
+}
+
+
+
+
