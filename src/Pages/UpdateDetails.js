@@ -10,33 +10,24 @@ import onlyStates from "../data/onlyStates";
 
 function UpdateDetails() {
   // ===== Personal Details =====
-  const [firstName, setFirstName] = useState("");
-  const [middleName, setMiddleName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [dob, setDob] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [nin, setNin] = useState("");
-  const [gender, setGender] = useState("");
-  const [maritalStatus, setMaritalStatus] = useState("");
+ 
   const [loading, setLoading] = useState(false);
-  const [isCitizen, setIsCitizen] = useState("");
-  const [country, setCountry] = useState("");
-  const [residenceState, setResidenceState] = useState("");
-  const [registeredUser, setRegisteredUser] = useState(null);
+  const [isCitizen] = useState("");
+ 
+  const [registeredUser] = useState(null);
   const [profile, setProfile] = useState(null);
 
 
   // ===== Other Details =====
-  const [lga, setLga] = useState("");
-  const [state, setState] = useState("");
-  const [ward, setWard] = useState("");
+  const [ setLga] = useState("");
+  const [setState] = useState("");
+  const [setWard] = useState("");
   const [agreed, setAgreed] = useState(false);
-  const [isNigeria, setIsNigeria] = useState("");
-  const [isVoters, setVoters] = useState("");
-  const [votersCardNo, setVotersCardNo] = useState("");
-  const [passportFile, setPassportFile] = useState(null);
-
+  const [isNigeria] = useState("");
+  const [isVoters] = useState("");
+  const [ setPassportFile] = useState(null);
+  
+  const [ setCountry] = useState("");
   // ===== Wards Data =====
   const [wardsData, setWardsData] = useState({});
   const [loadingWards, setLoadingWards] = useState(true);
@@ -95,10 +86,10 @@ useEffect(() => {
   fetchMyProfile();
 }, []);
 
-const handleChange = (e) => {
-  const { name, value } = e.target;
-  setFormData({ ...formData, [name]: value });
-};
+// const handleChange = (e) => {
+//   const { name, value } = e.target;
+//   setFormData({ ...formData, [name]: value });
+// };
 
 const [formData, setFormData] = useState({
   regID: "",
