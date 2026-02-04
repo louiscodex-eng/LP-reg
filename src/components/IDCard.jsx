@@ -93,8 +93,8 @@ function IDCard({ user }) {
 
             {/* TITLE */}
             <div className="flex-grow-1 text-center text-white">
-              <h2 className="mb-0 fw-bold">Abia Arise</h2>
-              <small>Arise for a new Abia!!</small>
+              <h2 className="mb-0 fw-bold">Labour Party</h2>
+              <small>Forward Ever!!</small>
             </div>
           </div>
 
@@ -147,9 +147,9 @@ function IDCard({ user }) {
                         textOverflow: "ellipsis",
                         verticalAlign: "bottom",
                       }}
-                      title={user.niN || user.NiN || user.NIN || user.NationalId}
+                      title={user.niN || user.NiN || user.NIN || user.nationalId}
                     >
-                      {user.niN || user.NiN || user.NIN || user.NationalId}
+                      {user.niN || user.NiN || user.NIN || user.nationalId}
                     </span>
                   </span>
                 </div>
@@ -199,21 +199,21 @@ function IDCard({ user }) {
 
                 {/* ROW 3 */}
                 <div style={{ display: "flex" }}>
-                  <span style={{ flex: "0 0 50%", marginLeft: "-34px", minWidth: 0 }}>
+                  <span style={{ flex: "0 0 50%", marginLeft: "-4px", minWidth: 0 }}>
                     <span className="fw-bold text-success">LGA: </span>
                     <span
                       className="truncate-text"
                       style={{
                         display: "inline-block",
-                        maxWidth: "150px",
+                        maxWidth: "100px",
                         whiteSpace: "nowrap",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         verticalAlign: "bottom",
                       }}
-                      title={user.lga || user.LGA}
+                      title={user.lga}
                     >
-                      {user.lga || user.LGA}
+                      {user.lga}
                     </span>
                   </span>
                   <span style={{ flex: "0 0 50%", minWidth: 0 }}>
@@ -233,9 +233,9 @@ function IDCard({ user }) {
                         textOverflow: "ellipsis",
                         verticalAlign: "bottom",
                       }}
-                      title={user.ward || user.Ward}
+                      title={user.ward}
                     >
-                      {user.ward || user.Ward}
+                      {user.ward}
                     </span>
                   </span>
                 </div>
