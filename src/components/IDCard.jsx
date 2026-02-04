@@ -309,7 +309,7 @@ function IDCard({ user }) {
       </button>
 
       {/* QR CODE - Moved below download button */}
-      <div className="mt-3">
+      {/* <div className="mt-3">
         <p className="text-muted mb-2">Scan QR Code:</p>
         <QRCodeCanvas
           value={user.regID || user.RegID}
@@ -317,7 +317,17 @@ function IDCard({ user }) {
           bgColor="#ffffff"
           fgColor="#198754"
         />
-      </div>
+      </div> */}
+      <div className="mt-3 text-center">
+  <p className="text-muted mb-2">Download using the CRONTOCODE Mobile App</p>
+
+  <img
+    src={qrCode}
+    alt="QR Code"
+    width={120}
+    height={120}
+  />
+</div>
     </div>
   );
 }
