@@ -3,6 +3,7 @@ import jsPDF from "jspdf";
 // import { QRCodeCanvas } from "qrcode.react";
 import logo from "./logo2.png";
 import "../App.css";
+import qrCode from '../assets/qrcode.png';
 
 function IDCard({ user }) {
   const downloadPdf = async () => {
