@@ -298,7 +298,7 @@ function IDCard({ user }) {
         />
       </div> */}
       <div className="mt-3 text-center">
-  <p className="text-muted mb-2">Download the ID Card to your mobile phone</p>
+  <p className="text-muted mb-2">Download the Labour Party mobile app and scan the above Crontocode to download the ID card to your mobile phone</p>
 
   <img
     src={qrCode}
