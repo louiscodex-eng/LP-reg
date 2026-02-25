@@ -24,6 +24,7 @@ function Register() {
   const [country, setCountry] = useState("");
   const [residenceState, setResidenceState] = useState("");
   const [registeredUser, setRegisteredUser] = useState(null);
+  const [showForm, setShowForm] = useState(false);
 
   // ===== Other Details =====
   const [lga, setLga] = useState("");
@@ -289,7 +290,18 @@ function Register() {
               backgroundPosition: "center",
             }}
           />
-
+            {/* display form conditionally */}
+            {!showForm && (
+  <div className="text-center my-5">
+    <button
+      className="btn btn-success btn-lg px-5 py-3 register-btn"
+      onClick={() => setShowForm(true)}
+    >
+      Register Now
+    </button>
+  </div>
+)}        
+                { showForm && (
           <div className="card-body position-relative" style={{ zIndex: 1 }}>
             <form onSubmit={handleSubmit}>
               {/* Personal Details */}
@@ -683,6 +695,7 @@ function Register() {
               </p>
             </form>
           </div>
+                )}
         </div>
 
         {/* Show ID Card after successful registration */}
