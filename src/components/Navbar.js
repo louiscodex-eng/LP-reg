@@ -43,6 +43,14 @@ function Navbar() {
               <NavLink to="/login" className="nav-link" onClick={closeMenu}>
                 Login
               </NavLink>
+
+               <NavLink
+                to="/reset-password"
+                className="nav-link"
+                onClick={closeMenu}
+              >
+                Reset Password
+              </NavLink>
             </>
           ) : (
             // Show these links when logged in
