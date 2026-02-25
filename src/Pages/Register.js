@@ -7,7 +7,7 @@ import nigeriaWards from "../data/nigeriaWards.json";
 import Navbar from "../components/Navbar";
 import IDCard from "../components/IDCard";
 import onlyStates from "../data/onlyStates";
-
+import { FaPhoneAlt, FaEnvelope } from "react-icons/fa";
 function Register() {
   // ===== Personal Details =====
   const [firstName, setFirstName] = useState("");
@@ -34,6 +34,8 @@ function Register() {
   const [isVoters, setVoters] = useState("");
   const [votersCardNo, setVotersCardNo] = useState("");
   const [passportFile, setPassportFile] = useState(null);
+  const [occupation, setOccupation] = useState("");
+  const [maidenName,setMaidenName] = useState("")
 
   // ===== Wards Data =====
   const [wardsData, setWardsData] = useState({});
@@ -190,16 +192,80 @@ function Register() {
       <ToastContainer />
 
       <div className="container pt-4 pb-5">
-        <div className="text-center mb-4">
-          <img
-            src={logo}
-            alt="Logo"
-            className="img-fluid mb-3"
-            style={{ maxHeight: "120px" }}
-          />
-          <h3 className="fw-bold mb-1">Labour Party</h3>
-          <h5 className="text-muted mb-3">Membership Registration Form</h5>
-        </div>
+      <div className="text-center mb-5 d-flex flex-column align-items-center">
+
+  {/* LOGO */}
+  <img
+    src={logo}
+    alt="Labour Party Logo"
+    className="img-fluid mb-3"
+    style={{ maxHeight: "110px" }}
+  />
+
+  {/* PARTY NAME */}
+  <h1 className="fw-bold mb-1" style={{ letterSpacing: "1px" }}>
+    Labour Party (LP)
+  </h1>
+
+  {/* MOTTO */}
+  <div
+    className="mb-2 px-3 py-1 rounded"
+    style={{
+      backgroundColor: "#19875415",
+      color: "#198754",
+      fontWeight: "500",
+      fontSize: "14px",
+    }}
+  >
+    MOTTO: EQUAL OPPORTUNITY AND SOCIAL JUSTICE
+  </div>
+
+  {/* PORTAL TITLE */}
+  <h5 className="text-muted mb-3" style={{ fontWeight: "500" }}>
+    LABOUR PARTY E-MEMBERSHIP REGISTRATION PORTAL
+  </h5>
+
+  {/* DIVIDER */}
+  <div
+    style={{
+      width: "260px",
+      height: "1px",
+      backgroundColor: "#198754",
+      borderRadius: "10px",
+      marginBottom: "15px",
+    }}
+  />
+
+  {/* ADDRESS */}
+  <h6 className="text-muted mb-1" style={{ lineHeight: "1.5" }}>
+    Labour Party National Secretariat,<br />
+    2 IBM Haruna Street, Utako, Abuja FCT
+  </h6>
+
+ {/* CONTACT INFO */}
+<div
+  className="d-flex justify-content-center align-items-center gap-4 mt-3"
+  style={{ fontSize: "14px" }}
+>
+  {/* Phone */}
+  <div className="d-flex align-items-center gap-2 text-muted">
+    <FaPhoneAlt size={16} color="#198754" />
+    <span> 07041004783, 08111114742</span>
+  </div>
+
+ {/* Email */}
+<div className="d-flex align-items-center gap-2 text-muted">
+  <a
+    href="mailto:lpnationalsecretariat@gmail.com"
+    className="d-flex align-items-center gap-2 text-muted text-decoration-none"
+  >
+    <FaEnvelope size={16} color="#198754" />
+    <span>lpnationalsecretariat@gmail.com</span>
+  </a>
+</div>
+</div>
+
+</div>
 
         <div
           className="card shadow-sm mx-auto position-relative"
@@ -269,6 +335,30 @@ function Register() {
                     placeholder="Email address"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+               <div className="row g-3 mb-3">
+                <div className="col-md-6">
+                  <label className="form-label fw-medium">Married? Please enter Maiden's Name</label>
+                  <input
+                    className="form-control"
+                    placeholder="Maiden Name"
+                    value={maidenName}
+                    onChange={(e) => setMaidenName(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label fw-medium">Occupation</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Enter your occupation"
+                    value={occupation}
+                    onChange={(e) => setOccupation(e.target.value)}
                     required
                   />
                 </div>
