@@ -119,7 +119,7 @@ const Dashboard = () => {
                     <small className="text-muted d-block mb-1">
                       Registration Number
                     </small>
-                    <strong className="text-success">{user.regID}</strong>
+                    <strong className="text-success">REG-ID: LP/{user.regID}</strong>
                   </div>
 
                   <div className="mb-3 p-3 bg-light rounded">
@@ -225,11 +225,11 @@ const Dashboard = () => {
                   )}
 
                   {/* Country */}
-                  {user.country && (
+                  {user.pollingUnit && (
                     <div className="col-6 col-md-4">
                       <div className="p-3 bg-light rounded h-100">
                         <small className="text-muted d-block mb-1">
-                          Country
+                          Polling Unit
                         </small>
                         <strong>{user.country}</strong>
                       </div>
@@ -237,11 +237,11 @@ const Dashboard = () => {
                   )}
 
                   {/* Voter Status */}
-                  {user.IsVoters && (
+                  {user.region&& (
                     <div className="col-6 col-md-4">
                       <div className="p-3 bg-light rounded h-100">
                         <small className="text-muted d-block mb-1">
-                          Voter's Card
+                          Region
                         </small>
                         <strong>{user.IsVoters}</strong>
                       </div>
@@ -249,11 +249,11 @@ const Dashboard = () => {
                   )}
 
                   {/* Citizenship */}
-                  {user.IsCitizen && (
+                  {user.occupation && (
                     <div className="col-6 col-md-4">
                       <div className="p-3 bg-light rounded h-100">
                         <small className="text-muted d-block mb-1">
-                          Nigerian Citizen
+                          Occupation
                         </small>
                         <strong>{user.IsCitizen}</strong>
                       </div>

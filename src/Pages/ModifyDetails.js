@@ -12,9 +12,7 @@ const ModifyDetails = () => {
   const [step, setStep] = useState(1);
   const { minutes, seconds, expired } = useOtpTimer();
   
-
-
-
+  
   const navigate = useNavigate();
 
   const handleProceed = () => {

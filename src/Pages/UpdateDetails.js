@@ -129,7 +129,7 @@ useEffect(() => {
       const token = localStorage.getItem("token");
   
       const response = await fetch(
-        "https://govtregistrationapi.onrender.com/api/Registration/update-profile",
+        "https://govtregistrationapi.onrender.com/api/Registration/update",
         {
           method: "PUT",
           headers: {
@@ -146,7 +146,7 @@ useEffect(() => {
         throw new Error(data.message || "Update failed");
       }
   
-      toast.success(data.message || "Profile updated successfully 🎉");
+      toast.success(data.message || "Profile updated successfully");
     } catch (error) {
       toast.error(error.message);
     } finally {

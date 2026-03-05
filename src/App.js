@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 import Register from "./Pages/Register";
 import Login from "./Pages/Login";
@@ -6,6 +7,7 @@ import ModifyDetails from "./Pages/ModifyDetails";
 import ResetPassword from "./Pages/ResetPassword";
 import UpdateDetails from "./Pages/UpdateDetails";
 import Dashboard from "./Pages/Dashboard";
+import AdminDashboard from "./Pages/AdminDashboard";
 
 function App() {
   return (
@@ -19,6 +21,7 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/update-details" element={<UpdateDetails />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/adminDashboard" element={<AdminDashboard/>} />
       </Routes>
     </Router>
   );

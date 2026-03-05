@@ -2,12 +2,16 @@ import { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import logo from "../logo2.png";
-import nigeriaStatesLGA from "../data/nigeriaStatesLGA";
-import nigeriaWards from "../data/nigeriaWards.json";
 import Navbar from "../components/Navbar";
 import IDCard from "../components/IDCard";
-import onlyStates from "../data/onlyStates";
 import { FaPhoneAlt, FaEnvelope } from "react-icons/fa";
+import {
+  getStates,
+  getLgas,
+  getWards,
+  getPollingUnits,
+} from "../APIs/locationservice";
+
 function Register() {
   // ===== Personal Details =====
   const [firstName, setFirstName] = useState("");
@@ -36,54 +40,132 @@ function Register() {
   const [votersCardNo, setVotersCardNo] = useState("");
   const [passportFile, setPassportFile] = useState(null);
   const [occupation, setOccupation] = useState("");
-  const [maidenName,setMaidenName] = useState("")
+  const [maidenName, setMaidenName] = useState("");
+
+  // ===== New Updates Fields =====
+  const [region, setRegion] = useState("");
+  const [pollingUnit, setPollingUnit] = useState("");
+  const [residentialAddress, setResidentialAddress] = useState("");
+  const [states, setStates] = useState([]);
+const [lgas, setLgas] = useState([]);
+const [wards, setWards] = useState([]);
+const [pollingUnits, setPollingUnits] = useState([]);
+
+
+
 
   // ===== Wards Data =====
-  const [wardsData, setWardsData] = useState({});
-  const [loadingWards, setLoadingWards] = useState(true);
+  
 
-  // ===== Transform local JSON into usable wardsData =====
-  useEffect(() => {
-    const transformed = {};
-    nigeriaWards.forEach((stateObj) => {
-      const stateName = stateObj.state.trim();
-      transformed[stateName] = {};
-      stateObj.lgas.forEach((lgaObj) => {
-        const lgaName = lgaObj.name.trim();
-        transformed[stateName][lgaName] = lgaObj.wards.map((w) => w.name.trim());
-      });
-    });
-    setWardsData(transformed);
-    setLoadingWards(false);
-  }, []);
+  const [loadingWardsApi, setLoadingWardsApi] = useState(false); // Fixed
+const [loadingLgas, setLoadingLgas] = useState(false);         // Fixed
+const [loadingStates, setLoadingStates] = useState(false);
+const [loadingPollingUnits, setLoadingPollingUnits] = useState(false);
+ // const [loadingWards] = useState(true);
+  
+
+  // Helper for numeric restriction and digit limit
+  const handleNumericInput = (value, setter) => {
+    const cleaned = value.replace(/\D/g, ""); // Remove non-numeric
+    if (cleaned.length <= 11) {
+      setter(cleaned);
+    }
+  };
+
+
+useEffect(() => {
+  const fetchStates = async () => {
+    try {
+      setLoadingStates(true);
+      const data = await getStates();
+      setStates(data);
+    } catch (error) {
+      toast.error("Failed to load states");
+    } finally {
+      setLoadingStates(false);
+    }
+  };
+
+  fetchStates();
+}, []);
+
+useEffect(() => {
+  if (!state) return;
+
+  const fetchLgas = async () => {
+    try {
+      setLoadingLgas(true);
+      const data = await getLgas(state);
+      setLgas(data);
+      setWards([]);
+      setPollingUnits([]);
+    } catch {
+      toast.error("Failed to load LGAs");
+    } finally {
+      setLoadingLgas(false);
+    }
+  };
+
+  fetchLgas();
+}, [state]);
+
+useEffect(() => {
+  if (!state || !lga) return;
+
+  const fetchWards = async () => {
+    try {
+      setLoadingWardsApi(true);
+      const data = await getWards(state, lga);
+      setWards(data);
+      setPollingUnits([]);
+    } catch {
+      toast.error("Failed to load wards");
+    } finally {
+      setLoadingWardsApi(false);
+    }
+  };
+
+  fetchWards();
+}, [state, lga]);
+
+useEffect(() => {
+  if (!state || !lga || !ward) return;
+
+  const fetchPollingUnitsData = async () => {
+    try {
+      setLoadingPollingUnits(true);
+      const data = await getPollingUnits(state, lga, ward);
+      setPollingUnits(data);
+    } catch {
+      toast.error("Failed to load polling units");
+    } finally {
+      setLoadingPollingUnits(false);
+    }
+  };
+
+  fetchPollingUnitsData();
+}, [state, lga, ward]);
+
 
   // ===== Submit Function =====
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Specific Validation for 11 digits
+    if (phone.length !== 11) {
+      toast.error("Phone number must be 11 digits");
+      return;
+    }
+    if (nin.length !== 11) {
+      toast.error("NIN must be 11 digits");
+      return;
+    }
+    if (isVoters === "Yes" && votersCardNo.length !== 11) {
+      toast.error("Voters Card No must be 11 digits");
+      return;
+    }
+
     setLoading(true);
-
-    // Debug: Log gender and marital status before sending
-    console.log("Gender before submit:", gender);
-    console.log("Marital Status before submit:", maritalStatus);
-
-    // Validate gender and marital status
-    if (!gender || gender === "") {
-      toast.error("Please select a gender", {
-        position: "top-right",
-        autoClose: 3000,
-      });
-      setLoading(false);
-      return;
-    }
-
-    if (!maritalStatus || maritalStatus === "") {
-      toast.error("Please select a marital status", {
-        position: "top-right",
-        autoClose: 3000,
-      });
-      setLoading(false);
-      return;
-    }
 
     try {
       const formData = new FormData();
@@ -96,10 +178,13 @@ function Register() {
       formData.append("Email", email);
       formData.append("PhoneNumber", phone);
       formData.append("NationalId", nin);
-      
-      // ===== FIXED: Ensure gender and marital status are sent =====
       formData.append("Gender", gender);
       formData.append("MaritalStatus", maritalStatus);
+      formData.append("Region", region);
+      formData.append("Occupation", occupation);
+      formData.append("PollingUnit", pollingUnit);
+      formData.append("ResidentialAddress", residentialAddress);
+      formData.append("MaidenName", maidenName);
 
       // ===== Residency =====
       formData.append("IsCitizen", isCitizen);
@@ -126,12 +211,6 @@ function Register() {
         formData.append("passport", passportFile);
       }
 
-      // Debug: Log what's being sent
-      console.log("FormData contents:");
-      for (let [key, value] of formData.entries()) {
-        console.log(`${key}:`, value);
-      }
-
       const response = await fetch(
         "https://govtregistrationapi.onrender.com/api/Registration/register",
         {
@@ -143,43 +222,16 @@ function Register() {
       const data = await response.json();
 
       if (response.ok) {
-        // ===== SUCCESS TOAST =====
-        toast.success(
-          "Registration successful! Kindly download your membership card below. Dont forget to reset your password",
-          {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-          }
-        );
-
-        setRegisteredUser(data.data);
-      } else {
-        // ===== ERROR TOAST =====
-        toast.error(data.message || "Something went wrong, try again", {
+        toast.success("Registration successful! Kindly download your membership card below.", {
           position: "top-right",
           autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
         });
+        setRegisteredUser(data.data);
+      } else {
+        toast.error(data.message || "Something went wrong, try again");
       }
     } catch (error) {
-      console.error("Error during registration:", error);
-      
-      // ===== NETWORK ERROR TOAST =====
-      toast.error("Something went wrong, try again", {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+      toast.error("Something went wrong, try again");
     } finally {
       setLoading(false);
     }
@@ -188,517 +240,306 @@ function Register() {
   return (
     <>
       <Navbar active="register" />
-      
-      {/* Toast Container - Required for notifications */}
       <ToastContainer />
 
       <div className="container pt-4 pb-5">
-      <div className="text-center mb-5 d-flex flex-column align-items-center">
+        <div className="text-center mb-5 d-flex flex-column align-items-center">
+          {/* LOGO */}
+          <img src={logo} alt="Labour Party Logo" className="img-fluid mb-3" style={{ maxHeight: "110px" }} />
 
-  {/* LOGO */}
-  <img
-    src={logo}
-    alt="Labour Party Logo"
-    className="img-fluid mb-3"
-    style={{ maxHeight: "110px" }}
-  />
+          {/* PARTY NAME */}
+          <h1 className="fw-bold mb-1" style={{ letterSpacing: "1px" }}>Labour Party (LP)</h1>
 
-  {/* PARTY NAME */}
-  <h1 className="fw-bold mb-1" style={{ letterSpacing: "1px" }}>
-    Labour Party (LP)
-  </h1>
+          {/* MOTTO */}
+          <div className="mb-2 px-3 py-1 rounded" style={{ backgroundColor: "#19875415", color: "#198754", fontWeight: "500", fontSize: "14px" }}>
+            MOTTO: EQUAL OPPORTUNITY AND SOCIAL JUSTICE
+          </div>
 
-  {/* MOTTO */}
-  <div
-    className="mb-2 px-3 py-1 rounded"
-    style={{
-      backgroundColor: "#19875415",
-      color: "#198754",
-      fontWeight: "500",
-      fontSize: "14px",
-    }}
-  >
-    MOTTO: EQUAL OPPORTUNITY AND SOCIAL JUSTICE
-  </div>
+          {/* PORTAL TITLE */}
+          <h5 className="text-muted mb-3" style={{ fontWeight: "500" }}>LABOUR PARTY E-MEMBERSHIP REGISTRATION PORTAL</h5>
 
-  {/* PORTAL TITLE */}
-  <h5 className="text-muted mb-3" style={{ fontWeight: "500" }}>
-    LABOUR PARTY E-MEMBERSHIP REGISTRATION PORTAL
-  </h5>
+          {/* DIVIDER */}
+          <div style={{ width: "260px", height: "1px", backgroundColor: "#198754", borderRadius: "10px", marginBottom: "15px" }} />
 
-  {/* DIVIDER */}
-  <div
-    style={{
-      width: "260px",
-      height: "1px",
-      backgroundColor: "#198754",
-      borderRadius: "10px",
-      marginBottom: "15px",
-    }}
-  />
+          {/* ADDRESS */}
+          <h6 className="text-muted mb-1" style={{ lineHeight: "1.5" }}>
+            Labour Party National Secretariat,<br />
+            2 IBM Haruna Street, Utako, Abuja FCT
+          </h6>
 
-  {/* ADDRESS */}
-  <h6 className="text-muted mb-1" style={{ lineHeight: "1.5" }}>
-    Labour Party National Secretariat,<br />
-    2 IBM Haruna Street, Utako, Abuja FCT
-  </h6>
+          {/* CONTACT INFO */}
+          <div className="d-flex justify-content-center align-items-center gap-4 mt-3" style={{ fontSize: "14px" }}>
+            <div className="d-flex align-items-center gap-2 text-muted">
+              <FaPhoneAlt size={16} color="#198754" />
+              <span> 07041004783, 08111114742</span>
+            </div>
+            <div className="d-flex align-items-center gap-2 text-muted">
+              <a href="mailto:lpnationalsecretariat@gmail.com" className="d-flex align-items-center gap-2 text-muted text-decoration-none">
+                <FaEnvelope size={16} color="#198754" />
+                <span>lpnationalsecretariat@gmail.com</span>
+              </a>
+            </div>
+          </div>
+        </div>
 
- {/* CONTACT INFO */}
-<div
-  className="d-flex justify-content-center align-items-center gap-4 mt-3"
-  style={{ fontSize: "14px" }}
->
-  {/* Phone */}
-  <div className="d-flex align-items-center gap-2 text-muted">
-    <FaPhoneAlt size={16} color="#198754" />
-    <span> 07041004783, 08111114742</span>
-  </div>
-
- {/* Email */}
-<div className="d-flex align-items-center gap-2 text-muted">
-  <a
-    href="mailto:lpnationalsecretariat@gmail.com"
-    className="d-flex align-items-center gap-2 text-muted text-decoration-none"
-  >
-    <FaEnvelope size={16} color="#198754" />
-    <span>lpnationalsecretariat@gmail.com</span>
-  </a>
-</div>
-</div>
-
-</div>
-
-        <div
-          className="card shadow-sm mx-auto position-relative"
-          style={{ maxWidth: "900px", overflow: "hidden" }}
-        >
+        <div className="card shadow-sm mx-auto position-relative" style={{ maxWidth: "900px", overflow: "hidden" }}>
           {/* Watermark */}
-          <div
-            style={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              width: "500px",
-              height: "500px",
-              opacity: 0.05,
-              zIndex: 0,
-              pointerEvents: "none",
-              backgroundImage: `url(${logo})`,
-              backgroundSize: "contain",
-              backgroundRepeat: "no-repeat",
-              backgroundPosition: "center",
-            }}
-          />
-            {/* display form conditionally */}
-            {!showForm && (
-  <div className="text-center my-5">
-    <button
-      className="btn btn-success btn-lg px-5 py-3 register-btn"
-      onClick={() => setShowForm(true)}
-    >
-      Register Now
-    </button>
-  </div>
-)}        
-                { showForm && (
-          <div className="card-body position-relative" style={{ zIndex: 1 }}>
-            <form onSubmit={handleSubmit}>
-              {/* Personal Details */}
-              <h6 className="fw-bold mb-3">Personal Details</h6>
-              <div className="row g-3 mb-3">
-                <div className="col-md-6">
-                  <label className="form-label fw-medium">FirstName</label>
-                  <input
-                    className="form-control"
-                    placeholder="First Name"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label fw-medium">Middle Name</label>
-                  <input
-                    className="form-control"
-                    placeholder="Middle Name"
-                    value={middleName}
-                    onChange={(e) => setMiddleName(e.target.value)}
-                  />
-                </div>
-              </div>
+          <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "500px", height: "500px", opacity: 0.05, zIndex: 0, pointerEvents: "none", backgroundImage: `url(${logo})`, backgroundSize: "contain", backgroundRepeat: "no-repeat", backgroundPosition: "center" }} />
+          
+          {!showForm && (
+            <div className="text-center my-5">
+              <button className="btn btn-success btn-lg px-5 py-3 register-btn" onClick={() => setShowForm(true)}>Register Now</button>
+            </div>
+          )}
 
-              <div className="row g-3 mb-3">
-                <div className="col-md-6">
-                  <label className="form-label fw-medium">Last Name</label>
-                  <input
-                    className="form-control"
-                    placeholder="Last Name"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label fw-medium">Email Address</label>
-                  <input
-                    type="email"
-                    className="form-control"
-                    placeholder="Email address"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-
-               <div className="row g-3 mb-3">
-                <div className="col-md-6">
-                  <label className="form-label fw-medium">Married? Please enter Maiden's Name</label>
-                  <input
-                    className="form-control"
-                    placeholder="Maiden Name"
-                    value={maidenName}
-                    onChange={(e) => setMaidenName(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label fw-medium">Occupation</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Enter your occupation"
-                    value={occupation}
-                    onChange={(e) => setOccupation(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="row g-3 mb-3">
-                <div className="col-md-6">
-                  <label className="form-label fw-medium">Date of Birth</label>
-                  <input
-                    type="date"
-                    className="form-control"
-                    value={dob}
-                    onChange={(e) => setDob(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label fw-medium">
-                    Do you reside in Nigeria?
-                  </label>
-                  <select
-                    className="form-select"
-                    value={isCitizen}
-                    onChange={(e) => {
-                      setIsCitizen(e.target.value);
-                      setState("");
-                      setLga("");
-                      setWard("");
-                      setCountry("");
-                    }}
-                    required
-                  >
-                    <option value="">Do you reside in Nigeria?</option>
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* State / LGA / Ward */}
-              {isCitizen === "Yes" && (
+          {showForm && (
+            <div className="card-body position-relative" style={{ zIndex: 1 }}>
+              <form onSubmit={handleSubmit}>
+                <h6 className="fw-bold mb-3">Personal Details</h6>
+                
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
-                    <label className="form-label fw-medium">State of Origin</label>
-                    <select
-                      className="form-select"
-                      value={state}
-                      onChange={(e) => {
-                        setState(e.target.value);
-                        setLga("");
-                        setWard("");
-                      }}
-                      required
-                    >
-                      <option value="">Select State of origin</option>
-                      {Object.keys(nigeriaStatesLGA).map((stateName) => (
-                        <option key={stateName} value={stateName}>
-                          {stateName}
-                        </option>
-                      ))}
-                    </select>
+                    <label className="form-label fw-medium">FirstName</label>
+                    <input className="form-control" placeholder="First Name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
                   </div>
-
                   <div className="col-md-6">
-                    <label className="form-label fw-medium">
-                      Local Government Area (LGA)
-                    </label>
-                    <select
-                      className="form-select"
-                      value={lga}
-                      onChange={(e) => setLga(e.target.value)}
-                      disabled={!state}
-                      required
-                    >
-                      <option value="">Select LGA</option>
-                      {state &&
-                        nigeriaStatesLGA[state].map((lgaName) => (
-                          <option key={lgaName} value={lgaName}>
-                            {lgaName}
-                          </option>
-                        ))}
-                    </select>
-                  </div>
-
-                  <div className="col-md-6">
-                    <label className="form-label fw-medium">Ward</label>
-                    <select
-                      className="form-select"
-                      value={ward}
-                      onChange={(e) => setWard(e.target.value)}
-                      disabled={!state || !lga || loadingWards}
-                      required
-                    >
-                      <option value="">
-                        {loadingWards ? "Loading wards..." : "Select Ward"}
-                      </option>
-                      {state && lga && wardsData[state] && wardsData[state][lga]
-                        ? wardsData[state][lga].map((wardName) => (
-                            <option key={wardName} value={wardName}>
-                              {wardName}
-                            </option>
-                          ))
-                        : null}
-                    </select>
+                    <label className="form-label fw-medium">Middle Name</label>
+                    <input className="form-control" placeholder="Middle Name" value={middleName} onChange={(e) => setMiddleName(e.target.value)} />
                   </div>
                 </div>
-              )}
 
-              <div className="row g-3 mb-3">
-                <div className="col-md-6">
-                  <label className="form-label fw-medium">Phone Number</label>
-                  <input
-                    className="form-control"
-                    placeholder="Phone number"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label fw-medium">
-                    National Identity Number(NIN)
-                  </label>
-                  <input
-                    className="form-control"
-                    placeholder="National Identity Number"
-                    value={nin}
-                    onChange={(e) => setNin(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Gender & Marital Status - FIXED */}
-              <div className="row g-3 mb-3">
-                <div className="col-md-6">
-                  <label className="form-label fw-medium">Gender *</label>
-                  <select
-                    className="form-select"
-                    value={gender}
-                    onChange={(e) => {
-                      console.log("Gender selected:", e.target.value);
-                      setGender(e.target.value);
-                    }}
-                    required
-                  >
-                    <option value="">Select Gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                  </select>
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label fw-medium">Marital Status *</label>
-                  <select
-                    className="form-select"
-                    value={maritalStatus}
-                    onChange={(e) => {
-                      console.log("Marital Status selected:", e.target.value);
-                      setMaritalStatus(e.target.value);
-                    }}
-                    required
-                  >
-                    <option value="">Select Marital Status</option>
-                    <option value="Single">Single</option>
-                    <option value="Married">Married</option>
-                    <option value="Divorced">Divorced</option>
-                    <option value="Widow">Widow</option>
-                    <option value="Widower">Widower</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Voter & Membership */}
-              <div className="row g-3 mb-3">
-                <div className="col-md-6">
-                  <label className="form-label fw-medium">
-                    Do you have a voters card?
-                  </label>
-                  <select
-                    className="form-select"
-                    value={isVoters}
-                    onChange={(e) => setVoters(e.target.value)}
-                    required
-                  >
-                    <option value="">Do you have a voters card?</option>
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                  </select>
-                </div>
-
-                <div className="col-md-6">
-                  <label className="form-label fw-medium">Country of Residence</label>
-                  <select
-                    className="form-select"
-                    value={isNigeria}
-                    onChange={(e) => setIsNigeria(e.target.value)}
-                    required
-                  >
-                    <option value="">Select country of residence</option>
-                    <option value="Nigeria">Nigeria</option>
-                    <option value="Other Country">Other Country</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Voters Card Number - Shows when Yes is selected */}
-              {isVoters === "Yes" && (
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
-                    <label className="form-label fw-medium">Voter's Card Number</label>
-                    <input
-                      className="form-control"
-                      placeholder="Enter Voter's Card No."
-                      value={votersCardNo}
-                      onChange={(e) => setVotersCardNo(e.target.value)}
-                    />
+                    <label className="form-label fw-medium">Last Name</label>
+                    <input className="form-control" placeholder="Last Name" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-medium">Email Address</label>
+                    <input type="email" className="form-control" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} />
                   </div>
                 </div>
-              )}
 
-              {/* If user selects Nigeria */}
-              {isNigeria === "Nigeria" && (
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
-                    <label className="form-label fw-medium">State of Residence</label>
-                    <select
-                      className="form-select"
-                      value={residenceState}
-                      onChange={(e) => setResidenceState(e.target.value)}
-                      required
-                    >
-                      <option value="">Select State</option>
-                      {Object.keys(onlyStates).map((stateName) => (
-                        <option key={stateName} value={stateName}>
-                          {stateName}
-                        </option>
-                      ))}
+                    <label className="form-label fw-medium">Married? Please enter Maiden's Name</label>
+                    <input className="form-control" placeholder="Maiden Name" value={maidenName} onChange={(e) => setMaidenName(e.target.value)} />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-medium">Occupation</label>
+                    <select className="form-select" value={occupation} onChange={(e) => setOccupation(e.target.value)} required>
+                      <option value="">Select Occupation</option>
+                      <option value="Government Workers">Government Workers</option>
+                      <option value="Private Sector">Private Sector</option>
+                      <option value="Self Employed">Self Employed</option>
+                      <option value="Unemployed">Unemployed</option>
                     </select>
                   </div>
                 </div>
-              )}
 
-              {/* If user selects Other Country */}
-              {isNigeria === "Other Country" && (
+                <div className="row g-3 mb-3">
+                  <div className="col-md-6">
+                    <label className="form-label fw-medium">Select Region</label>
+                    <select className="form-select" value={region} onChange={(e) => setRegion(e.target.value)} required>
+                      <option value="">Select Region</option>
+                      <option value="North Central">North Central</option>
+                      <option value="North East">North East</option>
+                      <option value="North West">North West</option>
+                      <option value="South East">South East</option>
+                      <option value="South South">South South</option>
+                      <option value="South West">South West</option>
+                      <option value="Abuja (FCT)">Abuja (FCT)</option>
+                    </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-medium">Date of Birth</label>
+                    <input type="date" className="form-control" value={dob} onChange={(e) => setDob(e.target.value)} required />
+                  </div>
+                </div>
+
+                <div className="row g-3 mb-3">
+                  <div className="col-md-6">
+                    <label className="form-label fw-medium">Residential Address</label>
+                    <input className="form-control" placeholder="Enter Residential Address" value={residentialAddress} onChange={(e) => setResidentialAddress(e.target.value)} required />
+                  </div>
+                 </div>
+                <div className="row g-3 mb-3">
+                  <div className="col-md-6">
+                    <label className="form-label fw-medium">Phone Number</label>
+                    <input className="form-control" placeholder="11-digit phone number" value={phone} onChange={(e) => handleNumericInput(e.target.value, setPhone)} required />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-medium">National Identity Number(NIN)</label>
+                    <input className="form-control" placeholder="11-digit NIN" value={nin} onChange={(e) => handleNumericInput(e.target.value, setNin)} required />
+                  </div>
+                </div>
+
+                <div className="row g-3 mb-3">
+                  <div className="col-md-6">
+                    <label className="form-label fw-medium">Gender *</label>
+                    <select className="form-select" value={gender} onChange={(e) => setGender(e.target.value)} required>
+                      <option value="">Select Gender</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                    </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-medium">Marital Status *</label>
+                    <select className="form-select" value={maritalStatus} onChange={(e) => setMaritalStatus(e.target.value)} required>
+                      <option value="">Select Marital Status</option>
+                      <option value="Single">Single</option>
+                      <option value="Married">Married</option>
+                      <option value="Divorced">Divorced</option>
+                      <option value="Widow">Widow</option>
+                      <option value="Widower">Widower</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="row g-3 mb-3">
+                  <div className="col-md-6">
+                    <label className="form-label fw-medium">Do you reside in Nigeria?</label>
+                    <select className="form-select" value={isCitizen} onChange={(e) => { setIsCitizen(e.target.value); setState(""); setLga(""); setWard(""); setCountry(""); }} required>
+                      <option value="">Do you reside in Nigeria?</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                    </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-medium">Do you have a voters card?</label>
+                    <select className="form-select" value={isVoters} onChange={(e) => setVoters(e.target.value)} required>
+                      <option value="">Do you have a voters card?</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                    </select>
+                  </div>
+                </div>
+
+                {isVoters === "Yes" && (
+                  <div className="row g-3 mb-3">
+                    <div className="col-md-6">
+                      <label className="form-label fw-medium">Voter's Card Number</label>
+                      <input className="form-control" placeholder="11-digit Voter's Card No." value={votersCardNo} onChange={(e) => handleNumericInput(e.target.value, setVotersCardNo)} />
+                    </div>
+                  </div>
+                )}
+
+               {/* STATE, LGA, WARD ROW */}
+{isCitizen === "Yes" && (
+  <>
+    <div className="row g-3 mb-3">
+      <div className="col-md-4">
+        <label className="form-label fw-medium">State of Origin</label>
+        <select className="form-select" value={state} onChange={(e) => { setState(e.target.value); setLga(""); setWard(""); }} required>
+          <option value="">{loadingStates ? "Loading..." : "Select State"}</option>
+          {states.map((s) => (<option key={s} value={s}>{s}</option>))}
+        </select>
+      </div>
+      <div className="col-md-4">
+        <label className="form-label fw-medium">LGA</label>
+        <select className="form-select" value={lga} onChange={(e) => setLga(e.target.value)} disabled={!state || loadingLgas} required>
+          <option value="">{loadingLgas ? "Loading..." : "Select LGA"}</option>
+          {lgas.map((l) => (<option key={l} value={l}>{l}</option>))}
+        </select>
+      </div>
+      <div className="col-md-4">
+        <label className="form-label fw-medium">Ward</label>
+        <select className="form-select" value={ward} onChange={(e) => setWard(e.target.value)} disabled={!lga || loadingWardsApi} required>
+          <option value="">{loadingWardsApi ? "Loading..." : "Select Ward"}</option>
+          {wards.map((w) => (<option key={w} value={w}>{w}</option>))}
+        </select>
+      </div>
+    </div>
+
+    {/* ONLY SHOW POLLING UNIT AFTER WARD IS SELECTED */}
+    {ward && (
+      <div className="row g-3 mb-3">
+        <div className="col-md-12">
+          <label className="form-label fw-medium">Polling Unit</label>
+          <select
+            className="form-select"
+            value={pollingUnit}
+            onChange={(e) => setPollingUnit(e.target.value)}
+            disabled={loadingPollingUnits}
+            required
+          >
+            <option value="">
+              {loadingPollingUnits ? "Loading Units..." : "Select Polling Unit"}
+            </option>
+            {pollingUnits.map((pu) => (
+              <option key={pu} value={pu}>{pu}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+    )}
+  </>
+)}
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
                     <label className="form-label fw-medium">Country of Residence</label>
-                    <select
-                      className="form-select"
-                      value={country}
-                      onChange={(e) => setCountry(e.target.value)}
-                      required
-                    >
-                      <option value="">Select your Country</option>
-                      <option value="Ghana">Ghana</option>
-                      <option value="Cameroon">Cameroon</option>
-                      <option value="USA">USA</option>
-                      <option value="UK">UK</option>
-                      <option value="Others">Others</option>
+                    <select className="form-select" value={isNigeria} onChange={(e) => setIsNigeria(e.target.value)} required>
+                      <option value="">Select country of residence</option>
+                      <option value="Nigeria">Nigeria</option>
+                      <option value="Other Country">Other Country</option>
                     </select>
                   </div>
-                </div>
-              )}
-
-              {/* Passport Upload */}
-              <div className="mb-3">
-                <label className="form-label fw-bold">
-                  Upload Passport Photograph
-                </label>
-                <input
-                  type="file"
-                  className="form-control"
-                  accept="image/*"
-                  onChange={(e) => setPassportFile(e.target.files[0])}
-                  required
-                />
-              </div>
-
-              {/* Terms */}
-              <div className="mb-3">
-                <div className="form-check">
-                  <input
-                    type="checkbox"
-                    className="form-check-input"
-                    id="terms"
-                    checked={agreed}
-                    onChange={(e) => setAgreed(e.target.checked)}
-                    required
-                  />
-                  <label className="form-check-label" htmlFor="terms">
-                    I agree to the terms and conditions
-                  </label>
-                </div>
-              </div>
-
-              {/* Register Button */}
-              <div className="d-grid mb-3">
-                <button
-                  type="submit"
-                  className="btn btn-success btn-lg"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <span
-                        className="spinner-border spinner-border-sm me-2"
-                        role="status"
-                        aria-hidden="true"
-                      ></span>
-                      Submitting...
-                    </>
-                  ) : (
-                    "Register"
+                  {isNigeria === "Nigeria" && (
+  <div className="col-md-6">
+    <label className="form-label fw-medium">State of Residence</label>
+    <select 
+      className="form-select" 
+      value={residenceState} 
+      onChange={(e) => setResidenceState(e.target.value)} 
+      required
+    >
+      <option value="">
+        {loadingStates ? "Loading..." : "Select State"}
+      </option>
+      {states.map((s) => (
+        <option key={s} value={s}>{s}</option>
+      ))}
+    </select>
+  </div>
+)}
+                  {isNigeria === "Other Country" && (
+                    <div className="col-md-6">
+                      <label className="form-label fw-medium">Country Name</label>
+                      <select className="form-select" value={country} onChange={(e) => setCountry(e.target.value)} required>
+                        <option value="">Select Country</option>
+                        <option value="Ghana">Ghana</option>
+                        <option value="Cameroon">Cameroon</option>
+                        <option value="USA">USA</option>
+                        <option value="UK">UK</option>
+                        <option value="Others">Others</option>
+                      </select>
+                    </div>
                   )}
-                </button>
-              </div>
+                </div>
 
-              <p className="text-muted small">
-                Note: This is a pre-membership registration form. You will be
-                contacted by your Local Government / Ward Representative once
-                your membership registration is approved and ready for pickup.
-              </p>
-            </form>
-          </div>
-                )}
+                <div className="mb-3">
+                  <label className="form-label fw-bold">Upload Passport Photograph</label>
+                  <input type="file" className="form-control" accept="image/*" onChange={(e) => setPassportFile(e.target.files[0])} required />
+                </div>
+
+                <div className="mb-3">
+                  <div className="form-check">
+                    <input type="checkbox" className="form-check-input" id="terms" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} required />
+                    <label className="form-check-label" htmlFor="terms">I agree to the terms and conditions</label>
+                  </div>
+                </div>
+
+                <div className="d-grid mb-3">
+                  <button type="submit" className="btn btn-success btn-lg" disabled={loading}>
+                    {loading ? <span className="spinner-border spinner-border-sm me-2"></span> : "Register"}
+                  </button>
+                </div>
+
+                <p className="text-muted small">Note: This is a pre-membership registration form. You will be contacted by your Local Government / Ward Representative once your membership registration is approved and ready for pickup.</p>
+              </form>
+            </div>
+          )}
         </div>
 
-        {/* Show ID Card after successful registration */}
         {registeredUser && (
           <div className="mt-4">
             <IDCard user={registeredUser} />

@@ -1,127 +1,169 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import FormCard from "../components/FormCard";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useNavigate } from "react-router-dom";
-
+import { useNavigate, useLocation } from "react-router-dom";
 
 const Login = () => {
   const [regId, setRegId] = useState("");
   const [password, setPassword] = useState("");
+  const [loginType, setLoginType] = useState("Membership"); 
   const [loading, setLoading] = useState(false);
   
-  const Navigate = useNavigate(); 
+  const navigate = useNavigate();
+  const location = useLocation();
 
-
- const handleLogin = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-
-  try {
-    const response = await fetch(
-      "https://govtregistrationapi.onrender.com/api/Registration/login",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          RegID: regId,
-          Password: password,
-        }),
-      }
-    );
-
-    const data = await response.json();
-    
-
-    if (!response.ok) {
-      // 🔥 show backend message if available
-      throw new Error(data.message || "Login failed");
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("type") === "admin") {
+      setLoginType("Administrative");
     }
 
-    // ✅ Store token
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("regId", data.regId);
+    const setToAdmin = () => setLoginType("Administrative");
+    const setToMember = () => setLoginType("Membership");
 
-      toast.success( data.message ||
-          "Login successful! Redirecting to dashboard...",
-          {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-          }
-        );
+    window.addEventListener('loginTypeAdmin', setToAdmin);
+    window.addEventListener('loginTypeMember', setToMember);
 
-    // OPTIONAL redirect
-    // ✅ Navigate to dashboard
-    setTimeout(() => {
-      Navigate("/dashboard");
-    }, 800);
+    return () => {
+      window.removeEventListener('loginTypeAdmin', setToAdmin);
+      window.removeEventListener('loginTypeMember', setToMember);
+    };
+  }, [location]);
 
-  } catch (error) {
-    toast.error(error.message || "Something went wrong, try again", {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
-  } finally {
-    setLoading(false);
-  }
-};
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
 
+    const isAdmin = loginType === "Administrative";
+    const apiUrl = isAdmin 
+      ? "https://govtregistrationapi.onrender.com/api/Admin/login" 
+      : "https://govtregistrationapi.onrender.com/api/Registration/login";
 
+    const payload = isAdmin 
+      ? { username: regId, password: password } 
+      : { RegID: regId, Password: password };
+
+    try {
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Login failed");
+      }
+
+      // --- THE FIX IS HERE ---
+      localStorage.setItem("token", data.token);
+      
+      if (isAdmin) {
+        // Use values directly from API response, not the loginType state
+        localStorage.setItem("role", data.role);     // This will be "National"
+        localStorage.setItem("access", data.access); // This will be "Write"
+        localStorage.setItem("username", data.username || regId);
+      } else {
+        localStorage.setItem("regId", data.regId);
+        localStorage.setItem("role", "Member");
+      }
+      // -----------------------
+
+      toast.success(data.message || "Login successful! Redirecting...");
+
+      setTimeout(() => {
+        if (isAdmin) {
+          navigate("/adminDashboard");
+        } else {
+          navigate("/dashboard");
+        }
+      }, 800);
+
+    } catch (error) {
+      toast.error(error.message || "Something went wrong, try again");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
       <Navbar />
-      <div className="container pt-4">
+      <div className="container pt-5">
         <ToastContainer />
-        <FormCard title="Member Login">
+        <FormCard title={`${loginType} Login`}>
+          
+          {/* --- MODERN TOGGLE PILL --- */}
+          <div className="mb-4">
+            <label className="form-label d-block text-center small fw-bold text-muted mb-3">
+              PLEASE SELECT LOGIN ACCOUNT TYPE
+            </label>
+            <div 
+              className="d-flex p-1 bg-light rounded-pill border" 
+              style={{ position: "relative", cursor: "pointer" }}
+            >
+              <div
+                onClick={() => setLoginType("Membership")}
+                className={`flex-grow-1 text-center py-2 rounded-pill transition-all ${
+                  loginType === "Membership" 
+                    ? "bg-success text-white shadow-sm" 
+                    : "text-muted"
+                }`}
+                style={{ fontSize: "14px", fontWeight: "600", transition: "0.3s" }}
+              >
+                Membership
+              </div>
+              <div
+                onClick={() => setLoginType("Administrative")}
+                className={`flex-grow-1 text-center py-2 rounded-pill transition-all ${
+                  loginType === "Administrative" 
+                    ? "bg-success text-white shadow-sm" 
+                    : "text-muted"
+                }`}
+                style={{ fontSize: "14px", fontWeight: "600", transition: "0.3s" }}
+              >
+                Administrative
+              </div>
+            </div>
+          </div>
+
           <form onSubmit={handleLogin}>
-            <input
-              className="form-control mb-3"
-              placeholder="Registration ID"
-              value={regId}
-              onChange={(e) => setRegId(e.target.value)}
-              required
-            />
+            <div className="mb-3">
+              <input
+                className="form-control py-2"
+                style={{ borderRadius: "8px" }}
+                placeholder={loginType === "Administrative" ? "Admin Username" : "Registration ID"}
+                value={regId}
+                onChange={(e) => setRegId(e.target.value)}
+                required
+              />
+            </div>
 
-            <input
-              type="password"
-              className="form-control mb-3"
-              placeholder="Enter your Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <div className="mb-3">
+              <input
+                type="password"
+                className="form-control py-2"
+                style={{ borderRadius: "8px" }}
+                placeholder="Enter your Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
 
-           <button
-  className="btn btn-success w-100 d-flex justify-content-center align-items-center"
-  disabled={loading}
->
-  {loading ? (
-    <>
-      <span
-        className="spinner-border spinner-border-lg me-2"
-        role="status"
-      />
-      Logging in...
-    </>
-  ) : (
-    "Login"
-  )}
-</button>
-
+            <button 
+              className="btn btn-success w-100 py-2 d-flex justify-content-center align-items-center" 
+              disabled={loading}
+              style={{ borderRadius: "8px", fontWeight: "600" }}
+            >
+              {loading ? (
+                <><span className="spinner-border spinner-border-sm me-2" role="status" /> Logging in...</>
+              ) : ("Login")}
+            </button>
           </form>
-
         </FormCard>
       </div>
     </>
