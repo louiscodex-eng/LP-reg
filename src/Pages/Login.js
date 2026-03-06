@@ -72,6 +72,7 @@ const Login = () => {
         localStorage.setItem("regId", data.regId);
         localStorage.setItem("role", "Member");
       }
+      window.dispatchEvent(new Event("storage"));
       // -----------------------
 
       toast.success(data.message || "Login successful! Redirecting...");

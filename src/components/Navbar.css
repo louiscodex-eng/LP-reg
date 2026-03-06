@@ -53,11 +53,8 @@
 .nav-logo {
 
   display: flex;
-
   align-items: center;
-
   gap: 8px;
-
   font-weight: 1000;
   font-size: large;
 

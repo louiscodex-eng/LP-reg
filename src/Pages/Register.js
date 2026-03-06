@@ -319,18 +319,18 @@ useEffect(() => {
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
                     <label className="form-label fw-medium">FirstName</label>
-                    <input className="form-control" placeholder="First Name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+                    <input type="text" className="form-control" placeholder="First Name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
                   </div>
                   <div className="col-md-6">
                     <label className="form-label fw-medium">Middle Name</label>
-                    <input className="form-control" placeholder="Middle Name" value={middleName} onChange={(e) => setMiddleName(e.target.value)} />
+                    <input type="text" className="form-control" placeholder="Middle Name" value={middleName} onChange={(e) => setMiddleName(e.target.value)} />
                   </div>
                 </div>
 
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
                     <label className="form-label fw-medium">Last Name</label>
-                    <input className="form-control" placeholder="Last Name" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+                    <input type="text" className="form-control" placeholder="Last Name" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
                   </div>
                   <div className="col-md-6">
                     <label className="form-label fw-medium">Email Address</label>
