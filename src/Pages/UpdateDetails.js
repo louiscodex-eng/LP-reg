@@ -194,9 +194,9 @@ useEffect(() => {
               <span> 07041004783, 08111114742</span>
             </div>
             <div className="d-flex align-items-center gap-2 text-muted">
-              <a href="mailto:lpnationalsecretariat@gmail.com" className="d-flex align-items-center gap-2 text-muted text-decoration-none">
+              <a href="mailto:NationalSecretariat@LabourPartyNigeria.org.ng" className="d-flex align-items-center gap-2 text-muted text-decoration-none">
                 <FaEnvelope size={16} color="#198754" />
-                <span>lpnationalsecretariat@gmail.com</span>
+                <span>NationalSecretariat@LabourPartyNigeria.org.ng</span>
               </a>
             </div>
           </div>

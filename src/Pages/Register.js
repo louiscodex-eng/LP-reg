@@ -58,7 +58,12 @@ const [pollingUnits, setPollingUnits] = useState([]);
 const [showTermsModal, setShowTermsModal] = useState(false);
 
   // ===== Wards Data =====
-  
+  const handleNameChange = (setter) => (e) => {
+  const value = e.target.value;
+  // This regex allows only letters (uppercase/lowercase) and spaces
+  const filteredValue = value.replace(/[^a-zA-Z\s]/g, "");
+  setter(filteredValue);
+};
 
   const [loadingWardsApi, setLoadingWardsApi] = useState(false); // Fixed
 const [loadingLgas, setLoadingLgas] = useState(false);         // Fixed
@@ -182,7 +187,29 @@ useEffect(() => {
     if (validateAge(dob) < 18) {
     toast.error("Access Denied: You must be at least 18 years old to register.");
     return; // Stop the registration process
-  }
+    }
+      // 3. Simple Required Field Checks (Do not use validateAge here!)
+    if (!email) {
+      toast.error("Please enter your email address");
+      return;
+    }
+    if (!firstName || !lastName) {
+      toast.error("Please enter your full name");
+      return;
+    }
+    if (!occupation) {
+      toast.error("Please select an occupation");
+      return;
+    }
+    if (!region) {
+      toast.error("Please select your region");
+      return;
+    }
+    if (!passportFile) {
+        toast.error("Please upload a passport photograph");
+        return;
+    }
+  
 
     setLoading(true);
 
@@ -293,9 +320,9 @@ useEffect(() => {
               <span> 07041004783, 08111114742</span>
             </div>
             <div className="d-flex align-items-center gap-2 text-muted">
-              <a href="mailto:lpnationalsecretariat@gmail.com" className="d-flex align-items-center gap-2 text-muted text-decoration-none">
+              <a href="mailto:NationalSecretariat@LabourPartyNigeria.org.ng" className="d-flex align-items-center gap-2 text-muted text-decoration-none">
                 <FaEnvelope size={16} color="#198754" />
-                <span>lpnationalsecretariat@gmail.com</span>
+                <span>NationalSecretariat@LabourPartyNigeria.org.ng</span>
               </a>
             </div>
           </div>
@@ -319,22 +346,22 @@ useEffect(() => {
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
                     <label className="form-label fw-medium">FirstName</label>
-                    <input type="text" className="form-control" placeholder="First Name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+                    <input type="text" className="form-control" placeholder="First Name" value={firstName} onChange={handleNameChange(setFirstName)}required />
                   </div>
                   <div className="col-md-6">
                     <label className="form-label fw-medium">Middle Name</label>
-                    <input type="text" className="form-control" placeholder="Middle Name" value={middleName} onChange={(e) => setMiddleName(e.target.value)} />
+                    <input type="text" className="form-control" placeholder="Middle Name" value={middleName} onChange={handleNameChange(setMiddleName)} />
                   </div>
                 </div>
 
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
                     <label className="form-label fw-medium">Last Name</label>
-                    <input type="text" className="form-control" placeholder="Last Name" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+                    <input type="text" className="form-control" placeholder="Last Name" value={lastName} onChange={handleNameChange(setLastName)} required />
                   </div>
                   <div className="col-md-6">
                     <label className="form-label fw-medium">Email Address</label>
-                    <input type="email" className="form-control" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} />
+                    <input type="email" className="form-control" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} required />
                   </div>
                 </div>
 

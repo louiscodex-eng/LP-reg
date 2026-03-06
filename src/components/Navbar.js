@@ -415,7 +415,7 @@ const handleLogout = useCallback(() => {
                 Login
               </NavLink>
               <NavLink to="/reset-password" className="nav-link" onClick={closeMenu}>
-                Reset Password
+                Create/Reset Password
               </NavLink>
             </>
           ) : (
