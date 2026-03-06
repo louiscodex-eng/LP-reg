@@ -3,6 +3,7 @@ import Navbar from "../components/Navbar";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import IDCard from "../components/IDCard";
+import { FaWallet } from "react-icons/fa";
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -85,8 +86,20 @@ const Dashboard = () => {
               <p className="text-muted mb-0">
                 Here's your membership information
               </p>
-            </div>
+                {/* PAYMENT BUTTON (HEADER PLACEMENT) */}
+          <div className="text-center text-md-end mt-3 mt-md-0">
+            <button 
+              className="btn btn-success btn-lg shadow-sm px-4 py-2"
+             // onClick={() => navigate("/payment")} // Assuming you have a payment route
+              style={{ borderRadius: "10px", fontWeight: "600" }}
+            >
+             <FaWallet className="me-2" /> Pay Membership Dues
+            </button>
           </div>
+            </div>
+          
+          </div>
+          
         </div>
 
         {/* Profile Overview Card */}

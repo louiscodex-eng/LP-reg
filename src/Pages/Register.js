@@ -11,6 +11,9 @@ import {
   getWards,
   getPollingUnits,
 } from "../APIs/locationservice";
+import TermsAndConditions from "../components/TermsAndConditions";
+import { Modal } from "react-bootstrap";
+
 
 function Register() {
   // ===== Personal Details =====
@@ -52,7 +55,7 @@ const [wards, setWards] = useState([]);
 const [pollingUnits, setPollingUnits] = useState([]);
 
 
-
+const [showTermsModal, setShowTermsModal] = useState(false);
 
   // ===== Wards Data =====
   
@@ -62,7 +65,18 @@ const [loadingLgas, setLoadingLgas] = useState(false);         // Fixed
 const [loadingStates, setLoadingStates] = useState(false);
 const [loadingPollingUnits, setLoadingPollingUnits] = useState(false);
  // const [loadingWards] = useState(true);
-  
+  const validateAge = (birthDate) => {
+  const today = new Date();
+  const dob = new Date(birthDate);
+  let age = today.getFullYear() - dob.getFullYear();
+  const monthDiff = today.getMonth() - dob.getMonth();
+
+  // Adjust age if birthday hasn't happened yet this year
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+    age--;
+  }
+  return age;
+};
 
   // Helper for numeric restriction and digit limit
   const handleNumericInput = (value, setter) => {
@@ -164,6 +178,11 @@ useEffect(() => {
       toast.error("Voters Card No must be 11 digits");
       return;
     }
+
+    if (validateAge(dob) < 18) {
+    toast.error("Access Denied: You must be at least 18 years old to register.");
+    return; // Stop the registration process
+  }
 
     setLoading(true);
 
@@ -521,12 +540,45 @@ useEffect(() => {
                   <input type="file" className="form-control" accept="image/*" onChange={(e) => setPassportFile(e.target.files[0])} required />
                 </div>
 
-                <div className="mb-3">
-                  <div className="form-check">
-                    <input type="checkbox" className="form-check-input" id="terms" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} required />
-                    <label className="form-check-label" htmlFor="terms">I agree to the terms and conditions</label>
-                  </div>
-                </div>
+              <div className="form-check mb-4 mt-3">
+          <input
+            type="checkbox"
+            className="form-check-input"
+            id="termsCheck"
+            required
+            checked={agreed} onChange={(e) => setAgreed(e.target.checked)} 
+          />
+          <label className="form-check-label small" htmlFor="termsCheck">
+            I agree to the{" "}
+            <span 
+              className="text-success fw-bold" 
+              style={{ cursor: "pointer", textDecoration: "underline" }}
+              // Trigger the modal instead of navigating
+              onClick={() => setShowTermsModal(true)} 
+            >
+              Terms and Conditions
+            </span>{" "}
+            and Privacy Policy.
+          </label>
+        </div>
+
+      {/* --- THE MODAL --- */}
+      <Modal 
+        show={showTermsModal} 
+        onHide={() => setShowTermsModal(false)} 
+        size="lg" 
+        centered 
+        scrollable
+      >
+        <Modal.Header closeButton className="border-0 pb-0">
+          <Modal.Title className="fw-bold">Legal Agreements</Modal.Title>
+        </Modal.Header>
+        
+        <Modal.Body className="p-0">
+          {/* We pass a prop so the component knows it's inside a modal */}
+          <TermsAndConditions isModal={true} closeModal={() => setShowTermsModal(false)} />
+        </Modal.Body>
+      </Modal>
 
                 <div className="d-grid mb-3">
                   <button type="submit" className="btn btn-success btn-lg" disabled={loading}>

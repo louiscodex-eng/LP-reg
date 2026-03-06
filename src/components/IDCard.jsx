@@ -22,6 +22,7 @@ function IDCard({ user }) {
     const canvas = await html2canvas(element, {
       scale: 3,
       useCORS: true,
+      backgroundColor: "#ffffff", // Prevents black backgrounds on some PDF readers
     });
 
     // Restore truncation after PDF generation
@@ -33,15 +34,25 @@ function IDCard({ user }) {
 
     const imgData = canvas.toDataURL("image/png");
 
-    // Adjusted PDF height to fit both cards (approx 135mm for two 65mm cards + gap)
+    /* CALCULATION FOR NO STRETCH:
+       Width: 450px -> 120mm
+       Height: (280 + 280 + 16 margin) = 576px -> ~155mm
+       PDF Format: [130, 170] provides a perfect "bucket" for this shape.
+    */
     const pdf = new jsPDF({
       orientation: "portrait",
       unit: "mm",
-      format: [130, 140], 
+      format: [130, 170], 
     });
 
-    pdf.addImage(imgData, "PNG", 2.5, 5, 125, 130);
-    pdf.save("labour-party-id-card.pdf");
+    // Parameters: imgData, type, x, y, width, height
+    // We set height to 0 to allow jsPDF to calculate it automatically based on the image ratio
+    const imgProps = pdf.getImageProperties(imgData);
+    const pdfWidth = pdf.internal.pageSize.getWidth() - 10; // 5mm margin on each side
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+    pdf.addImage(imgData, "PNG", 5, 5, pdfWidth, pdfHeight);
+    pdf.save(`LP_ID_${user.regID || user.RegID}.pdf`);
   };
 
   // Common Header Component to maintain consistency
@@ -89,18 +100,18 @@ function IDCard({ user }) {
           <div style={{ position: "relative", zIndex: 2, padding: "10px", height: "100%" }}>
             <CardHeader />
             <div className="row mt-3">
-              <div className="col-8 fw-medium text-start px-4 mt-2">
-                <div style={{ display: "flex", flexDirection: "column", gap: "2px", color: "#404040", textTransform:'uppercase' }}>
+              <div className="col-8 fw-medium text-start px-4 mt-3">
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px", color: "#404040", textTransform:'uppercase' }}>
                   <span className="truncate-text" style={{ fontSize: "12px" }}>{`Full Name: ${user.firstName} ${user.lastName} ${user.middleName}`}</span>
                   <span className="truncate-text" style={{ fontSize: "12px" }}>{`State: ${user.state}`}</span>
                   <span className="truncate-text" style={{ fontSize: "12px" }}>{`LGA: ${user.lga}`}</span>
                   <span className="truncate-text" style={{ fontSize: "12px" }}>{`Ward: ${user.ward || user.Ward}`}</span>
                   
                   {/* TWO SIGNATURES AT BOTTOM */}
-                  <div className="d-flex justify-content-between mt-4"style={{ 
+                  <div className="d-flex justify-content-between mt-1"style={{ 
     width: "calc(100% + 200px)", // Expands width to counteract the px-4 padding
-    marginLeft: "-8px",        // Pulls the left signature to the edge
-    paddingRight: "55px",        // Adjusts right alignment
+   marginLeft: "10px",        // Pulls the left signature to the edge
+    paddingRight: "250px",        // Adjusts right alignment
     paddingTop:"12px"
   }} >
                     <div className="text-center">
@@ -121,7 +132,7 @@ function IDCard({ user }) {
                   src={user.passportUrl || user.PassportUrl}
                   alt="passport"
                   className="img-thumbnail"
-                  style={{ width: "120px", height: "120px", objectFit: "cover", borderColor: "#198754" }}
+                  style={{ width: "150px", height: "130px", objectFit: "cover", borderColor: "#198754", overflow:"hidden" }}
                 />
               </div>
             </div>
@@ -141,14 +152,18 @@ function IDCard({ user }) {
         >
           <div style={{ position: "relative", zIndex: 2, padding: "10px", height: "100%" }}>
         <CardHeader/>
-            <div className="px-4 py-3 text-center mt-3">
-              <h5 className="fw-bold text-success mb-2">Important Notice</h5>
+            <div className="px-3 py-2 text-center mt-1">
+               <p style={{ fontSize: "12px", color: "#333", lineHeight: "1.6" }}>
+              Please present your digital card and passport photograph at your respective 
+              ward offices for validation and confirmation
+              </p>
+              <h6 className="fw-bold text-success mb-1">Important Notice</h6>
               <p style={{ fontSize: "12px", color: "#333", lineHeight: "1.6" }}>
                 This card is an official property of the Labour Party (LP). 
                 If found, please return to the nearest Labour Party Office or 
                 to the National Secretariat at No. 2 IBM Haruna Street, Utako, Abuja.
               </p>
-               <h5 style={{ fontSize: "12px",}}  className="fw-bold f-12 text-success mb-2">Signed:MGT.</h5>
+               <h5 style={{ fontSize: "12px",}}  className="fw-bold f-12 text-success mb-2">Signed:National Secretary</h5>
             </div>
           </div>
         </div>

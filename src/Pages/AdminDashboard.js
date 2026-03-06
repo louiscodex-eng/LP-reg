@@ -12,6 +12,8 @@ import * as XLSX from 'xlsx';
 import RegistrationForm from "../components/RegistrationForm";
 import CreateAdminForm from "../components/CreateAdminForm";
 import { jwtDecode } from "jwt-decode";
+import IDCardActions from "../components/IDCardActions";
+import BulkIDDownload from "../components/BulkIDDownload";
 
 const AdminDashboard = () => {
   const [showFilters, setShowFilters] = useState(true);
@@ -21,7 +23,7 @@ const AdminDashboard = () => {
   const [isCreated, setIsCreated] = useState(false); 
   const [totalPages,setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-
+  const [filteredUsers, setFilteredUsers] = useState([]);
 // --- STATE MANAGEMENT ---
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -55,12 +57,6 @@ const handleRegistrationSuccess = (userData) => {
   handleSearch(); // Refresh the table so the new user appears
 };
 
-
-
-// const openAdminModal = () => {
-//   setModalType("createAdmin");
-//   setShowModal(true);
-// };
 const exportToExcel = () => {
   if (users.length === 0) {
     toast.warning("No data available to export");
@@ -109,7 +105,13 @@ const exportToExcel = () => {
   const handleSearch = async (e, pageNumber = 1) => {
   if (e) e.preventDefault();
   setLoading(true);
-  
+  // 1. Create a cleaned version of the filters
+  const cleanedFilters = Object.fromEntries(
+    Object.entries(filters).map(([key, value]) => [
+      key, 
+      value === "" ? null : value  // Convert "" to null for the backend
+    ])
+  );
   // Determine if we are searching (POST) or fetching all (GET)
   const isFiltered = Object.values(filters).some(val => val !== "");
   
@@ -121,7 +123,7 @@ const exportToExcel = () => {
     const response = await fetch(url, {
       method: isFiltered ? "POST" : "GET",
       headers: getAuthHeader(),
-      ...(isFiltered && { body: JSON.stringify(filters) })
+      ...(isFiltered && { body: JSON.stringify(cleanedFilters) })
     });
 
     const result = await response.json();
@@ -132,12 +134,14 @@ const exportToExcel = () => {
         // Search usually returns a simple array of results
         const userData = Array.isArray(result) ? result : [];
         setUsers(userData);
+        setFilteredUsers(userData);
         setTotalPages(1); // Usually search results are single-page or local
         setTotalCount(userData.length);
       } else {
         // --- PAGINATED LOGIC (GET) ---
         // Based on the JSON you shared: { totalCount: 62, totalPages: 7, data: [...] }
         setUsers(result.data || []);
+        setFilteredUsers(result.data); // <--- ADD THIS LINE HERE
         setTotalPages(result.totalPages || 1);
         setTotalCount(result.totalCount || 0); // This fixes your 'not defined' error
       }
@@ -172,17 +176,7 @@ const exportToExcel = () => {
     handleSearch(null, 1);
     toast.info("Filters cleared");
   };
-// const handleEdit = (user) => {
-//   setSelectedUser(user);     // Memory: "I am working on Oji Louis"
-//   setModalType("editUser");  // Memory: "I am in Edit Mode"
-//   setShowModal(true);        // Action: "Open the window"
-// };
 
-  // --- PAGINATION LOGIC ---
- // const indexOfLastItem = currentPage * itemsPerPage;
- // const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  
- // const totalPages = Math.ceil(users.length / itemsPerPage);
 
   // 2. Fetch data from the API
   useEffect(() => {
@@ -262,19 +256,7 @@ const exportToExcel = () => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
   };
-//  const handleRowClick = (user) => {
-//     // Map table data to the format the IDCard component expects
-//     const userForId = {
-//       ...user,
-//       firstName: user.name?.split(' ')[0] || "",
-//       lastName: user.name?.split(' ')[1] || "",
-//       regID: user.id
-//     };
-//     setSelectedUser(userForId);
-//     setModalType("editUser");
-//     setIsCreated(false);
-//     setShowModal(true);
-//   };
+
 
   const openRegisterModal = (type) => {
     setModalType(type);
@@ -392,6 +374,18 @@ const exportToExcel = () => {
                       Clear
                     </button>
                   </div>
+                  {/* --- BULK DOWNLOAD SECTION --- */}
+{filteredUsers && filteredUsers.length > 0 && (
+  <>
+    <hr className="my-3 text-muted" />
+    <label className="small fw-bold text-muted mb-2 d-block">EXPORT OPTIONS</label>
+    {/* Pass the same data array here */}
+    <BulkIDDownload users={filteredUsers} /> 
+    <p className="x-small text-muted mt-2 mb-0" style={{ fontSize: '11px' }}>
+      * Generates a PDF of the current {filteredUsers.length} filtered records.
+    </p>
+  </>
+)}
                 </div>
               )}
             </div>
@@ -404,17 +398,22 @@ const exportToExcel = () => {
                 <table className="table table-hover align-middle mb-0 text-nowrap">
                   <thead className="table-light">
                     <tr>
-                      <th className="ps-4" style={{ minWidth: '140px' }}>Reg ID</th>
-                      <th style={{ minWidth: '200px' }}>Full Name</th>
-                      <th style={{ minWidth: '120px' }}>State</th>
-                      <th style={{ minWidth: '120px' }}>LGA</th>
-                      <th style={{ minWidth: '150px' }}>Ward</th>
-                      <th style={{ minWidth: '150px' }}>Polling Unit</th>
-                      <th style={{ minWidth: '130px' }}>Phone</th>
-                      <th style={{ minWidth: '220px' }}>Email</th>
-                      <th style={{ minWidth: '120px' }}>Region</th>
-                      <th style={{ minWidth: '120px' }}>Date of Birth</th>
-                      {hasWriteAccess && <th className="text-center sticky-end bg-light" style={{ minWidth: '100px' }}>Action</th>}
+                     <th className="ps-4" style={{ minWidth: '140px' }}>Reg ID</th>
+            {/* New Columns for Names */}
+            <th style={{ minWidth: '150px' }}>First Name</th>
+            <th style={{ minWidth: '150px' }}>Middle Name</th>
+            <th style={{ minWidth: '150px' }}>Last Name</th>
+            <th style={{ minWidth: '200px' }}>Full Name</th>
+            {/* New Column for Address */}
+            <th style={{ minWidth: '250px' }}>Residential Address</th>
+            <th style={{ minWidth: '120px' }}>State</th>
+            <th style={{ minWidth: '120px' }}>LGA</th>
+            <th style={{ minWidth: '150px' }}>Ward</th>
+            <th style={{ minWidth: '150px' }}>Polling Unit</th>
+            <th style={{ minWidth: '130px' }}>Phone</th>
+            <th style={{ minWidth: '220px' }}>Email</th>
+            <th style={{ minWidth: '120px' }}>Region</th>
+            <th style={{ minWidth: '120px' }}>Date of Birth</th>                      {hasWriteAccess && <th className="text-center sticky-end bg-light" style={{ minWidth: '100px' }}>Action</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -428,28 +427,46 @@ const exportToExcel = () => {
                     ) : users && users.length > 0 ? (
                       users.map((user) => (
                         <tr key={user.id}>
-                          <td className="ps-4 fw-bold text-success">LP/{user.regID}</td>
-                          <td className="fw-semibold">{user.firstName} {user.middleName} {user.lastName}</td>
-                          <td>{user.state}</td>
-                          <td>{user.lga}</td>
-                          <td>{user.ward}</td>
-                          <td>{user.pollingUnit || "N/A"}</td>
-                          <td>{user.phoneNumber}</td>
-                          <td className="text-lowercase">{user.email}</td>
-                          <td>{user.region || "N/A"}</td>
-                          <td>{user.dob ? new Date(user.dob).toLocaleDateString() : "N/A"}</td>
+                         <td className="ps-4 fw-bold text-success">LP/{user.regID}</td>
+                {/* Individual Name Columns */}
+                <td>{user.firstName || "N/A"}</td>
+                <td>{user.middleName || "N/A"}</td>
+                <td>{user.lastName || "N/A"}</td>
+                {/* Full Name Combined */}
+                <td className="fw-semibold">{user.firstName} {user.middleName} {user.lastName}</td>
+                {/* Residential Address Column */}
+                <td className="text-wrap" style={{ maxWidth: '250px' }}>
+                   {user.residentialAddress || "N/A"}
+                </td>
+                <td>{user.state}</td>
+                <td>{user.lga}</td>
+                <td>{user.ward}</td>
+                <td>{user.pollingUnit || "N/A"}</td>
+                <td>{user.phoneNumber}</td>
+                <td className="text-lowercase">{user.email}</td>
+                <td>{user.region || "N/A"}</td>
+                <td>{user.dob ? new Date(user.dob).toLocaleDateString() : "N/A"}</td>
                           {hasWriteAccess && (
-                            <td className="text-center">
-                              <button className="btn btn-sm btn-success px-3" onClick={() => { setSelectedUser(user); setModalType("editUser"); setShowModal(true); }}>
-                                <FaEdit className="me-1" /> Edit
-                              </button>
+                            <td className="text-center sticky-end bg-light">
+                              <div className="d-flex align-items-center justify-content-center gap-2">
+      {/* Our New Component */}
+      <IDCardActions user={user} />
+      
+      {/* Your Existing Edit Button */}
+      <button 
+        className="btn btn-sm btn-success px-3" 
+        onClick={() => { setSelectedUser(user); setModalType("editUser"); setShowModal(true); }}
+      >
+        <FaEdit className="me-1" /> Edit
+      </button>
+    </div>
                             </td>
                           )}
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="11" className="text-center p-5 text-muted">No records found.</td>
+                        <td colSpan="15" className="text-center p-5 text-muted">No records found.</td>
                       </tr>
                     )}
                   </tbody>

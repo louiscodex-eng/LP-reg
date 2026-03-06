@@ -58,7 +58,8 @@
 
   gap: 8px;
 
-  font-weight: 600;
+  font-weight: 1000;
+  font-size: large;
 
 }
 
@@ -66,9 +67,9 @@
 
 .nav-logo img {
 
-  width: 40px;
+  width: 60px;
 
-  height: 40px;
+  height: 60px;
 
   border-radius: 50%;
 

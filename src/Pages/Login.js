@@ -4,13 +4,15 @@ import FormCard from "../components/FormCard";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const Login = () => {
   const [regId, setRegId] = useState("");
   const [password, setPassword] = useState("");
   const [loginType, setLoginType] = useState("Membership"); 
   const [loading, setLoading] = useState(false);
-  
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -142,18 +144,46 @@ const Login = () => {
               />
             </div>
 
-            <div className="mb-3">
-              <input
-                type="password"
-                className="form-control py-2"
-                style={{ borderRadius: "8px" }}
-                placeholder="Enter your Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+           {/* --- PASSWORD FIELD WITH EYE ICON --- */}
+            <div className="mb-1">
+              <div className="input-group">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="form-control py-2"
+                  style={{ 
+                    borderTopLeftRadius: "8px", 
+                    borderBottomLeftRadius: "8px",
+                    borderRight: "none" 
+                  }}
+                  placeholder="Enter your Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <span 
+                  className="input-group-text bg-white" 
+                  style={{ 
+                    borderTopRightRadius: "8px", 
+                    borderBottomRightRadius: "8px",
+                    borderLeft: "none",
+                    cursor: "pointer",
+                    color: "#6c757d"
+                  }}
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </span>
+              </div>
             </div>
 
+            <div className="text-end mb-4">
+              <Link 
+                to="/reset-password" 
+                className="text-success text-decoration-none small fw-bold"
+              >
+                Forgot Password? Reset here
+              </Link>
+            </div>
             <button 
               className="btn btn-success w-100 py-2 d-flex justify-content-center align-items-center" 
               disabled={loading}

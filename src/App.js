@@ -8,6 +8,7 @@ import ResetPassword from "./Pages/ResetPassword";
 import UpdateDetails from "./Pages/UpdateDetails";
 import Dashboard from "./Pages/Dashboard";
 import AdminDashboard from "./Pages/AdminDashboard";
+import TermsAndConditions from "./components/TermsAndConditions";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/update-details" element={<UpdateDetails />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/adminDashboard" element={<AdminDashboard/>} />
+        <Route path= "/terms" element={<TermsAndConditions/>} />
       </Routes>
     </Router>
   );
