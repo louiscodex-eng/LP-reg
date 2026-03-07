@@ -56,7 +56,7 @@ const Footer = () => {
               </p>
               <p className="mb-2 d-flex align-items-center text-white-50">
                 <FaEnvelope className="me-2 text-success" />
-                lpnationalsecretariat@gmail.com
+            NationalSecretariat@LabourPartyNigeria.org.ng
               </p>
               <p className="mb-0 d-flex align-items-center text-white-50">
                 <FaPhoneAlt className="me-2 text-success" />

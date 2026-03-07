@@ -197,7 +197,7 @@ const ResetPassword = () => {
 
       if (!response.ok) throw new Error(data.message || "Password reset failed");
 
-      toast.success(data.message || "Password set successfully 🎉");
+      toast.success(data.message || "Password set successfully");
       setStep(4);
       setTimeout(() => navigate("/login"), 3000);
     } catch (error) {
@@ -220,6 +220,7 @@ const ResetPassword = () => {
               <input
                 className="form-control mb-3"
                 placeholder="Registration ID"
+                type="number"
                 value={regId}
                 onChange={(e) => setRegId(e.target.value)}
               />

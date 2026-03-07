@@ -244,7 +244,7 @@ const Dashboard = () => {
                         <small className="text-muted d-block mb-1">
                           Polling Unit
                         </small>
-                        <strong>{user.country}</strong>
+                        <strong>{user.pollingUnit}</strong>
                       </div>
                     </div>
                   )}
@@ -256,7 +256,7 @@ const Dashboard = () => {
                         <small className="text-muted d-block mb-1">
                           Region
                         </small>
-                        <strong>{user.IsVoters}</strong>
+                        <strong>{user.region}</strong>
                       </div>
                     </div>
                   )}
@@ -268,7 +268,7 @@ const Dashboard = () => {
                         <small className="text-muted d-block mb-1">
                           Occupation
                         </small>
-                        <strong>{user.IsCitizen}</strong>
+                        <strong>{user.occupation}</strong>
                       </div>
                     </div>
                   )}

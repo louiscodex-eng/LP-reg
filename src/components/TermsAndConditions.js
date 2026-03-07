@@ -123,7 +123,8 @@ const TermsAndConditions = () => {
               <div className="row small">
                 <div className="col-md-6 mb-3 mb-md-0">
                   <p className="mb-1 opacity-75"><strong>Email:</strong></p>
-                  <p>lpnationalsecretariat@gmail.com</p>
+                  <p>NationalSecretariat@LabourPartyNigeria.org.ng
+</p>
                   <p className="mb-1 opacity-75 mt-2"><strong>Official Lines:</strong></p>
                   <p>08111114742, 07041004783</p>
                 </div>

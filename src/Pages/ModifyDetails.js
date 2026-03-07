@@ -1,6 +1,3 @@
-
-
-
 import { useState } from "react"; 
 import Navbar from "../components/Navbar";
 import FormCard from "../components/FormCard";
@@ -13,33 +10,33 @@ const ModifyDetails = () => {
   const [step, setStep] = useState(1);
   const [regId, setRegId] = useState("");
   const [userEmail, setUserEmail] = useState("");
-  const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false); // New state for resend loading
+  const [otp, setOtp] = useState("");
 
   const navigate = useNavigate();
-  const { minutes, seconds, expired, startTimer } = useOtpTimer();
+  const { minutes, seconds, expired, startTimer } = useOtpTimer(600);
 
-  // API Base URL
   const API_BASE = "https://govtregistrationapi.onrender.com/api/Registration";
 
-  // ===== Step 1: Verify User & Send Email OTP =====
-  const handleSendOtp = async () => {
+  // ===== Refactored Send/Resend OTP Logic =====
+  const handleSendOtp = async (isResend = false) => {
     if (!regId) return toast.error("Please enter your Registration ID");
-    setLoading(true);
+    
+    // Use different loading states to avoid UI jumping
+    if (isResend) setResending(true); else setLoading(true);
 
     try {
-      // 1. First Verify the RegID exists
+      // 1. Verify the RegID exists (only strictly necessary on first attempt, but safe to keep)
       const verifyRes = await fetch(`${API_BASE}/verify/${regId}`);
       const verifyData = await verifyRes.json();
 
       if (!verifyRes.ok) throw new Error(verifyData.message || "Invalid Registration ID");
 
-      // Extract details needed for OTP
       const email = verifyData.data.email || verifyData.data.Email;
       const firstName = verifyData.data.fullName ? verifyData.data.fullName.split(' ')[0] : "Member";
 
       if (!email) throw new Error("No registered email found for this ID.");
-      
       setUserEmail(email);
 
       // 2. Call the Send OTP Endpoint
@@ -51,20 +48,21 @@ const ModifyDetails = () => {
 
       if (!otpRes.ok) throw new Error("Failed to trigger OTP email. Try again.");
 
+      // 3. UI Updates
       setStep(2);
-if (typeof startTimer === 'function') {
-    startTimer(); // This is where the error was likely triggered
-  }
+      if (typeof startTimer === 'function') {
+        startTimer(); // Restart the timer
+      }
       
-      toast.success(`OTP sent to ${email.replace(/(.{3})(.*)(?=@)/, "$1***")}`);
+      toast.success(isResend ? "New OTP sent successfully!" : `OTP sent to ${email.replace(/(.{3})(.*)(?=@)/, "$1***")}`);
     } catch (error) {
       toast.error(error.message);
     } finally {
+      setResending(false);
       setLoading(false);
     }
   };
 
-  // ===== Step 2: Verify Email OTP =====
   const handleVerifyOtp = async () => {
     if (!otp) return toast.error("Please enter the OTP");
     setLoading(true);
@@ -77,12 +75,9 @@ if (typeof startTimer === 'function') {
       });
 
       const data = await response.json();
-
       if (!response.ok) throw new Error(data.message || "Invalid or expired OTP");
 
       toast.success("Identity verified successfully");
-      
-      // Final Step: Redirect to the update page with the RegID
       navigate("/update-details", { state: { regId } });
     } catch (error) {
       toast.error(error.message);
@@ -99,13 +94,11 @@ if (typeof startTimer === 'function') {
       <div className="container pt-4">
         <FormCard title="Modify Membership Details">
 
-          {/* STEP 1: ENTER REG ID */}
           {step === 1 && (
             <>
-              <p className="text-muted small mb-3">
-                Enter your Registration ID to receive a verification code.
-              </p>
+              <p className="text-muted small mb-3">Enter your Registration ID to receive a verification code.</p>
               <input
+                type="number"
                 className="form-control mb-3"
                 placeholder="Registration ID"
                 value={regId}
@@ -114,55 +107,55 @@ if (typeof startTimer === 'function') {
               <button
                 className="btn btn-success w-100"
                 disabled={loading}
-                onClick={handleSendOtp}
+                onClick={() => handleSendOtp(false)}
               >
-                {loading ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-2"></span>
-                    Verifying...
-                  </>
-                ) : "Proceed to Verify"}
+                {loading ? "Verifying..." : "Proceed to Verify"}
               </button>
             </>
           )}
 
-          {/* STEP 2: ENTER OTP */}
           {step === 2 && (
             <>
               <p className="text-muted small mb-1">Enter the code sent to {userEmail.replace(/(.{3})(.*)(?=@)/, "$1***")}</p>
               <input
-                type="text"
+                type="number"
                 className="form-control mb-2"
                 placeholder="Enter OTP"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
-                disabled={expired}
               />
               
-              <small className={`d-block mb-3 ${expired ? "text-danger" : "text-muted"}`}>
-                {expired
-                  ? "OTP expired. Please restart the process."
-                  : `OTP expires in ${minutes}:${seconds.toString().padStart(2, "0")}`}
-              </small>
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <small className={expired ? "text-danger" : "text-muted"}>
+                  {expired
+                    ? "OTP expired."
+                    : `Expires in ${minutes}:${seconds.toString().padStart(2, "0")}`}
+                </small>
+
+                {/* RESEND BUTTON: Only clickable when expired */}
+                <button 
+                  className="btn btn-link p-0 text-success text-decoration-none small"
+                  style={{ fontSize: '0.85rem' }}
+                  onClick={() => handleSendOtp(true)}
+                  disabled={!expired || resending}
+                >
+                  {resending ? "Sending..." : "Resend OTP"}
+                </button>
+              </div>
 
               <button
                 className="btn btn-success w-100"
                 disabled={loading || expired}
                 onClick={handleVerifyOtp}
               >
-                {loading ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-2"></span>
-                    Verifying OTP...
-                  </>
-                ) : "Confirm & Proceed"}
+                {loading ? "Verifying OTP..." : "Confirm & Proceed"}
               </button>
 
               <button 
-                className="btn btn-link w-100 text-success mt-2 text-decoration-none btn-sm"
+                className="btn btn-link w-100 text-muted mt-2 text-decoration-none btn-sm"
                 onClick={() => setStep(1)}
               >
-                Change ID
+                Back to Registration ID
               </button>
             </>
           )}
