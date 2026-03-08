@@ -16,7 +16,7 @@ const Dashboard = () => {
       if (!token) throw new Error("User not authenticated");
 
       const response = await fetch(
-        "https://govtregistrationapi.onrender.com/api/Registration/dashboard",
+        "http://84.247.165.61/LabourParty/api/api/Users/dashboard",
         {
           headers: {
             "Content-Type": "application/json",

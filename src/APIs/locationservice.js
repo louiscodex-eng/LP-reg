@@ -1,4 +1,4 @@
-const BASE_URL = "https://govtregistrationapi.onrender.com/api/locations";
+const BASE_URL = "http://84.247.165.61/LabourParty/api/locations";
 
 export const getStates = async () => {
   const res = await fetch(`${BASE_URL}/states`);

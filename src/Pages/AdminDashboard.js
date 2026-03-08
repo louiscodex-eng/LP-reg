@@ -116,8 +116,8 @@ const exportToExcel = () => {
   const isFiltered = Object.values(filters).some(val => val !== "");
   
   const url = isFiltered 
-    ? "https://govtregistrationapi.onrender.com/api/Admin/search"
-    : `https://govtregistrationapi.onrender.com/api/Admin/users?page=${pageNumber}&pageSize=10`;
+    ? "http://84.247.165.61/LabourParty/api/Admin/search"
+    : `http://84.247.165.61/LabourParty/api/Admin/users?page=${pageNumber}&pageSize=10`;
 
   try {
     const response = await fetch(url, {
@@ -183,7 +183,7 @@ const exportToExcel = () => {
     const fetchStats = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch("https://govtregistrationapi.onrender.com/api/Admin/dashboard-stats", {
+        const response = await fetch("http://84.247.165.61/LabourParty/api/Admin/dashboard-stats", {
           method: "GET",
           headers: {
             "Authorization": `Bearer ${token}`, // Assuming your API requires the token

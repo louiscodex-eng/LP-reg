@@ -1,90 +1,3 @@
-// import { useState } from "react"; 
-// import Navbar from "../components/Navbar";
-// import FormCard from "../components/FormCard";
-// import { toast, ToastContainer } from "react-toastify";
-// import "react-toastify/dist/ReactToastify.css";
-// import { useNavigate } from "react-router-dom";
-// import { FaEye, FaEyeSlash } from "react-icons/fa";
-
-// const ResetPassword = () => {
-//   const [step, setStep] = useState(1);
-//   const [regId, setRegId] = useState("");
-//   const [otp, setOtp] = useState("");
-//   const [userEmail, setUserEmail] = useState("");
-//   const [password, setPassword] = useState("");
-//   const [confirm, setConfirm] = useState("");
-//   const [loading, setLoading] = useState(false);
-
-//   const navigate = useNavigate();
-// const [showPass, setShowPass] = useState(false);
-//   const [showConfirm, setShowConfirm] = useState(false);
-
-//   // ===== Send OTP Step =====
-//   const handleSendOtp = async () => {
-//     if (!regId) return toast.error("Please enter your Registration ID");
-//     setLoading(true);
-
-//     try {
-//       const verifyRes = await fetch(`https://govtregistrationapi.onrender.com/api/Registration/verify/${regId}`);
-//       const verifyData = await verifyRes.json();
-
-//       if (!verifyRes.ok) {
-//         throw new Error(verifyData.message || "Invalid Registration ID");
-//       }
-//       // If valid, call your Email OTP endpoint here
-//       // const otpRes = await fetch("...");
-//       setStep(2);
-//       toast.success("OTP sent to your registered phone number");
-//     } catch (error) {
-//       toast.error(error.message || "Failed to send OTP");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-
-//   // ===== Verify OTP Step =====
-//   const handleVerifyOtp = () => {
-//     if (!otp) return toast.error("Please enter the OTP");
-//     // For now we skip actual OTP verification
-//     setStep(3);
-//     toast.success("OTP verified successfully");
-//   };
-
-//   // ===== Reset Password Step =====
-//   const handleResetPassword = async () => {
-//     if (!password || !confirm) return toast.error("Fill all fields");
-//     if (password !== confirm) return toast.error("Passwords do not match");
-
-//     setLoading(true);
-
-//     try {
-//       const response = await fetch(
-//         "https://govtregistrationapi.onrender.com/api/Registration/reset-password",
-//         {
-//           method: "POST",
-//           headers: { "Content-Type": "application/json" },
-//           body: JSON.stringify({ RegID: regId, Password: password }),
-//         }
-//       );
-
-//       const data = await response.text();
-
-//       if (!response.ok) {
-//         throw new Error(data.message || "Password reset failed");
-//       }
-
-//       toast.success(data.message || "Password set successfully 🎉");
-//       setStep(4);
-
-//       // Redirect to login after 2s
-//       setTimeout(() => navigate("/login"), 2000);
-//     } catch (error) {
-//       toast.error(error.message || "Something went wrong");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
 
 import { useState } from "react"; 
 import Navbar from "../components/Navbar";
@@ -108,7 +21,7 @@ const ResetPassword = () => {
   const [showConfirm, setShowConfirm] = useState(false);
 
   // API Base URL - Update this based on environment
-  const API_BASE = "https://govtregistrationapi.onrender.com/api/Registration";
+  const API_BASE = "http://84.247.165.61/LabourParty/api/Users";
 
   // ===== Step 1: Verify User & Send Email OTP =====
   const handleSendOtp = async () => {

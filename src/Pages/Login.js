@@ -40,8 +40,8 @@ const Login = () => {
 
     const isAdmin = loginType === "Administrative";
     const apiUrl = isAdmin 
-      ? "https://govtregistrationapi.onrender.com/api/Admin/login" 
-      : "https://govtregistrationapi.onrender.com/api/Registration/login";
+      ? "http://84.247.165.61/LabourParty/api/Admin/login" 
+      : "http://84.247.165.61/LabourParty/api/Users/login";
 
     const payload = isAdmin 
       ? { username: regId, password: password } 

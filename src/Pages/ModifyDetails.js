@@ -17,7 +17,7 @@ const ModifyDetails = () => {
   const navigate = useNavigate();
   const { minutes, seconds, expired, startTimer } = useOtpTimer(600);
 
-  const API_BASE = "https://govtregistrationapi.onrender.com/api/Registration";
+  const API_BASE = "http://84.247.165.61/LabourParty/api/Users";
 
   // ===== Refactored Send/Resend OTP Logic =====
   const handleSendOtp = async (isResend = false) => {

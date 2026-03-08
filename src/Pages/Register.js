@@ -302,7 +302,7 @@ if (!emailRegex.test(email)) {
       }
 
       const response = await fetch(
-        "https://govtregistrationapi.onrender.com/api/Registration/register",
+        "http://84.247.165.61/LabourParty/api/Users/register",
         {
           method: "POST",
           body: formData,
@@ -316,7 +316,22 @@ if (!emailRegex.test(email)) {
           position: "top-right",
           autoClose: 5000,
         });
-        setRegisteredUser(data.data);
+
+// Combine the server's ID with the current form state
+    const completeUserData = {
+        regID: data.regId, // From server
+        firstName: firstName,
+        lastName: lastName,
+        middleName: middleName,
+        state: state,
+        lga: lga,
+        ward: ward,
+        // Create a local URL for the uploaded image so it displays immediately
+        passportUrl: URL.createObjectURL(passportFile) 
+    };
+
+
+        setRegisteredUser(completeUserData);
         resetForm();
       } else {
         toast.error(data.message || "Something went wrong, try again");

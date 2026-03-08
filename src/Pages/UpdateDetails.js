@@ -60,7 +60,7 @@ function UpdateDetails() {
     }
 
     const response = await fetch(
-      "https://govtregistrationapi.onrender.com/api/Registration/my-profile",
+      "http://84.247.165.61/LabourParty/api/Users/my-profile",
       {
         headers: {
           "Content-Type": "application/json",

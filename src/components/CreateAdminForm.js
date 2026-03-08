@@ -59,7 +59,7 @@ const CreateAdminForm = ({ onSuccess }) => {
     };
 
     try {
-      const response = await fetch("https://govtregistrationapi.onrender.com/api/Admin/create-admin", {
+      const response = await fetch("http://84.247.165.61/LabourParty/api/Admin/create-admin", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

@@ -212,11 +212,11 @@ const RegistrationForm = ({onSuccess, isAdminMode, initialData, isEdit }) => {
 
   // DEBUG LOGS - Check these in the browser console
   console.log("--- DEBUGGING UPDATE ---");
-  console.log("Target URL:", "https://govtregistrationapi.onrender.com/api/Registration/update");
+  console.log("Target URL:", "http://84.247.165.61/LabourParty/api/Users/update");
   console.log("Payload being sent:", updatePayload);
   console.log("Token exists:", !!token);
 
-  response = await fetch("https://govtregistrationapi.onrender.com/api/Registration/update", {
+  response = await fetch("http://84.247.165.61/LabourParty/api/Users/update", {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -251,7 +251,7 @@ const RegistrationForm = ({onSuccess, isAdminMode, initialData, isEdit }) => {
       if (isNigeria === "Nigeria" && residenceState) formData.append("ResidenceState", residenceState);
       formData.append("passport", passportFile);
 
-      response = await fetch("https://govtregistrationapi.onrender.com/api/Registration/register", {
+      response = await fetch("http://84.247.165.61/LabourParty/api/Users/register", {
         method: "POST",
         body: formData,
       });
