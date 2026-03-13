@@ -16,7 +16,8 @@ const Dashboard = () => {
       if (!token) throw new Error("User not authenticated");
 
       const response = await fetch(
-        "http://84.247.165.61/LabourParty/api/api/Users/dashboard",
+         "https://registration.labourpartynigeria.org.ng:8443/api/Users/dashboard",
+        // "https://localhost:44332/api/Users/dashboard",
         {
           headers: {
             "Content-Type": "application/json",
@@ -132,7 +133,7 @@ const Dashboard = () => {
                     <small className="text-muted d-block mb-1">
                       Registration Number
                     </small>
-                    <strong className="text-success">REG-ID: LP/{user.regID}</strong>
+                    <strong className="text-success">REG-ID:{user.regID}</strong>
                   </div>
 
                   <div className="mb-3 p-3 bg-light rounded">

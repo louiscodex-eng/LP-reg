@@ -1,59 +1,83 @@
 
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import logo from "./logo2.png";
+import logo from "./logo2.jpeg";
 import "../App.css";
 //import qrCode from './qrcode.png';
 import chairman from './senator.png'
 import secretary from './secretary.png'
+import { useRef, useState } from "react";
+import { toast } from "react-toastify";
+import { FaFilePdf, FaSpinner } from 'react-icons/fa';
+
 
 function IDCard({ user }) {
-  const downloadPdf = async () => {
-    const element = document.getElementById("id-card-wrapper");
+
+  const cardRef = useRef(null);
+const [isGenerating, setIsGenerating] = useState(false);
+  if (!user) return <div className="p-5 text-center">Loading ID Card...</div>;
+
+  
+ const downloadPdf = async () => {
+  // 1. Get the element from the ref
+  const element = cardRef.current;
+
+  // 2. CRITICAL NULL CHECK: If it's null, we stop the crash
+  if (!element) {
+    console.error("Capture element is null. Check if ref={cardRef} is attached.");
+    toast.error("Could not find the ID card layout. Please try again.");
+    return;
+  }
+
+  setIsGenerating(true);
+
+  try {
+    // 3. Instead of searching for children, apply logic to the element itself
+    // This prevents the querySelectorAll crash if the IDs are missing
+    const textElements = element.querySelectorAll('p, span, .truncate-text');
     
-    // Temporarily remove truncation for PDF generation
-    const truncatedElements = element.querySelectorAll('.truncate-text');
-    truncatedElements.forEach(el => {
+    textElements.forEach(el => {
       el.style.whiteSpace = 'normal';
       el.style.overflow = 'visible';
-      el.style.textOverflow = 'clip';
     });
 
     const canvas = await html2canvas(element, {
       scale: 3,
       useCORS: true,
-      backgroundColor: "#ffffff", // Prevents black backgrounds on some PDF readers
+      backgroundColor: "#ffffff",
+      logging: false, // Turn off logs to keep console clean
+      width: 450,
+      windowWidth: 1200
     });
 
-    // Restore truncation after PDF generation
-    truncatedElements.forEach(el => {
+    // Restore styles
+    textElements.forEach(el => {
       el.style.whiteSpace = 'nowrap';
       el.style.overflow = 'hidden';
-      el.style.textOverflow = 'ellipsis';
     });
 
     const imgData = canvas.toDataURL("image/png");
-
-    /* CALCULATION FOR NO STRETCH:
-       Width: 450px -> 120mm
-       Height: (280 + 280 + 16 margin) = 576px -> ~155mm
-       PDF Format: [130, 170] provides a perfect "bucket" for this shape.
-    */
     const pdf = new jsPDF({
       orientation: "portrait",
       unit: "mm",
       format: [130, 170], 
     });
 
-    // Parameters: imgData, type, x, y, width, height
-    // We set height to 0 to allow jsPDF to calculate it automatically based on the image ratio
     const imgProps = pdf.getImageProperties(imgData);
-    const pdfWidth = pdf.internal.pageSize.getWidth() - 10; // 5mm margin on each side
+    const pdfWidth = pdf.internal.pageSize.getWidth() - 10;
     const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
     pdf.addImage(imgData, "PNG", 5, 5, pdfWidth, pdfHeight);
-    pdf.save(`LP_ID_${user.regID || user.RegID}.pdf`);
-  };
+    pdf.save(`LP_ID_${user.regID || user.RegID || 'Member'}.pdf`);
+    
+    toast.success("Download Complete!");
+  } catch (error) {
+    console.error("PDF Error:", error);
+    toast.error("Failed to generate PDF");
+  } finally {
+    setIsGenerating(false);
+  }
+};
 
   // Common Header Component to maintain consistency
   const CardHeader = () => (
@@ -64,9 +88,6 @@ function IDCard({ user }) {
       <img src={logo} alt="logo" style={{ 
           width: "60px",
           height: "60px",
-          borderRadius: "50%", // Makes it circular
-          border: "1px solid white", // White border
-          backgroundColor: "white", // Ensures no transparency gaps
           padding: "2px", // Slight space between logo and border
           objectFit: "contain"
         }} />
@@ -74,7 +95,7 @@ function IDCard({ user }) {
         <h2 className="mb-0 fw-bold" style={{ fontSize: "20px" }}>Labour Party(LP)</h2>
         <i style={{ fontSize: "10px" }}>Motto: EQUAL OPPORTUNITY AND SOCIAL JUSTICE</i>
         <div className="fw-bold" style={{ fontSize: "14px", marginTop: "1px" }}>
-          {` REG-ID: LP/${user.regID || user.RegID}`}
+          {` REG-ID:${user.regID || user.RegID}`}
         </div>
       </div>
     </div>
@@ -83,7 +104,8 @@ function IDCard({ user }) {
   return (
     <div className="text-center mt-5">
       {/* WRAPPER FOR BOTH CARDS */}
-      <div id="id-card-wrapper" style={{ width: "450px", margin: "0 auto" }}>
+      {/* <div id="id-card-wrapper" style={{ width: "450px", margin: "0 auto" }}> */}
+      <div ref={cardRef} style={{ width: "450px", margin: "0 auto" }}>
         
         {/* 🔹 FRONT CARD */}
         <div
@@ -102,7 +124,7 @@ function IDCard({ user }) {
             <div className="row mt-3">
               <div className="col-8 fw-medium text-start px-4 mt-3">
                 <div style={{ display: "flex", flexDirection: "column", gap: "4px", color: "#404040", textTransform:'uppercase' }}>
-                  <span className="truncate-text" style={{ fontSize: "12px" }}>{`Full Name: ${user.firstName} ${user.lastName} ${user.middleName}`}</span>
+                  <span className="truncate-text" style={{ fontSize: "12px" }}>{`Full Name: ${user.firstName} ${user.middleName && user.middleName !== "null" ? user.middleName : ""} ${user.lastName}`}</span>
                   <span className="truncate-text" style={{ fontSize: "12px" }}>{`State: ${user.state}`}</span>
                   <span className="truncate-text" style={{ fontSize: "12px" }}>{`LGA: ${user.lga}`}</span>
                   <span className="truncate-text" style={{ fontSize: "12px" }}>{`Ward: ${user.ward || user.Ward}`}</span>
@@ -131,6 +153,7 @@ function IDCard({ user }) {
                 <img
                   src={user.passportUrl || user.PassportUrl}
                   alt="passport"
+                  crossOrigin="anonymous"
                   className="img-thumbnail"
                   style={{ width: "150px", height: "130px", objectFit: "cover", borderColor: "#198754", overflow:"hidden" }}
                 />
@@ -170,10 +193,15 @@ function IDCard({ user }) {
         </div>
       </div>
 
-      {/* CONTROLS */}
-      <button className="btn btn-success mt-4" onClick={downloadPdf}>
-        Download ID Card (PDF)
-      </button>
+     {/* Update your PDF button to look like this */}
+<button 
+  className="btn btn-lg btn-outline-success px-4 mt-3" 
+  onClick={downloadPdf} 
+  disabled={isGenerating} // <--- USE IT HERE
+>
+  {/* AND USE IT HERE TO SHOW THE SPINNER */}
+  {isGenerating ? <FaSpinner className="spin" /> : <FaFilePdf />} Download your Membership ID Card in PDF
+</button>
 
       {/* <div className="mt-4 text-center">
         <p className="text-muted mb-2" style={{ maxWidth: "450px", margin: "0 auto" }}>

@@ -40,12 +40,14 @@ const Login = () => {
 
     const isAdmin = loginType === "Administrative";
     const apiUrl = isAdmin 
-      ? "http://84.247.165.61/LabourParty/api/Admin/login" 
-      : "http://84.247.165.61/LabourParty/api/Users/login";
+      ? "https://registration.labourpartynigeria.org.ng:8443/api/Admin/login" 
+    // ? "https://localhost:44332/api/Admin/login" 
+       : "https://registration.labourpartynigeria.org.ng:8443/api/Users/login";
+     // : "https://localhost:44332/api/Users/login";
 
     const payload = isAdmin 
-      ? { username: regId, password: password } 
-      : { RegID: regId, Password: password };
+      ? { username: regId.trim(), password: password.trim() } 
+      : { RegID: regId.trim(), Password: password.trim() };
 
     try {
       const response = await fetch(apiUrl, {
@@ -140,7 +142,7 @@ const Login = () => {
                 style={{ borderRadius: "8px" }}
                 placeholder={loginType === "Administrative" ? "Admin Username" : "Registration ID"}
                 value={regId}
-                onChange={(e) => setRegId(e.target.value)}
+                onChange={(e) => setRegId(e.target.value.trim())}
                 required
               />
             </div>
@@ -158,7 +160,7 @@ const Login = () => {
                   }}
                   placeholder="Enter your Password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => setPassword(e.target.value.trim())}
                   required
                 />
                 <span 

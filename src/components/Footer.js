@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaFacebook, FaTwitter, FaInstagram } from 'react-icons/fa';
-import logo from './logo2.png'; // Adjust path based on your folder structure
+import logo from './logo2.jpeg'; // Adjust path based on your folder structure
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();

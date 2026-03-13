@@ -1,4 +1,4 @@
-import logo from "../logo2.png";
+import logo from "../logo2.jpeg";
 
 const FormCard = ({ title, children }) => {
   return (

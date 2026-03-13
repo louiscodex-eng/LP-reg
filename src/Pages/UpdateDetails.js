@@ -1,155 +1,253 @@
 import { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import logo from "../logo2.png";
-import nigeriaStatesLGA from "../data/nigeriaStatesLGA";
-import nigeriaWards from "../data/nigeriaWards.json";
+import logo from "../logo2.jpeg";
 import Navbar from "../components/Navbar";
-import IDCard from "../components/IDCard";
-import onlyStates from "../data/onlyStates";
-import { FaPhoneAlt, FaEnvelope } from "react-icons/fa";
+import { 
+  getStates, 
+  getLgas, 
+  getWards, 
+  getPollingUnits 
+} from "../APIs/locationservice";
+import { jwtDecode } from "jwt-decode";
+// Added Modal import
+import { Modal } from "react-bootstrap"; 
+// Assuming you have this component based on your error log
+import TermsAndConditions from "../components/TermsAndConditions";
 
 function UpdateDetails() {
-  // ===== Personal Details =====
- 
+  // ===== State variables (matching your Register page) =====
+  const [firstName, setFirstName] = useState("");
+  const [middleName, setMiddleName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [dob, setDob] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [nin, setNin] = useState("");
+  const [gender, setGender] = useState("");
+  const [maritalStatus, setMaritalStatus] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isCitizen] = useState("");
- 
-  const [registeredUser] = useState(null);
-  const [profile, setProfile] = useState(null);
+  const [isCitizen, setIsCitizen] = useState("");
+  const [country, setCountry] = useState("");
+  const [residenceState, setResidenceState] = useState("");
+  const [lga, setLga] = useState("");
+  const [state, setState] = useState("");
+  const [ward, setWard] = useState("");
+  const [isNigeria, setIsNigeria] = useState("");
+  const [isVoters, setVoters] = useState("");
+  const [votersCardNo, setVotersCardNo] = useState("");
+  const [passportFile, setPassportFile] = useState(null);
+  const [occupation, setOccupation] = useState("");
+  const [maidenName, setMaidenName] = useState("");
+  const [region, setRegion] = useState("");
+  const [pollingUnit, setPollingUnit] = useState("");
+  const [residentialAddress, setResidentialAddress] = useState("");
 
+  // Location Data Lists
+  const [states, setStates] = useState([]);
+  const [lgas, setLgas] = useState([]);
+  const [wards, setWards] = useState([]);
+  const [pollingUnits, setPollingUnits] = useState([]);
 
-  // ===== Other Details =====
-  const [ setLga] = useState("");
-  const [setState] = useState("");
-  const [setWard] = useState("");
+  // New states fixed for the 'no-undef' errors
   const [agreed, setAgreed] = useState(false);
-  const [isNigeria] = useState("");
-  const [isVoters] = useState("");
-  const [ setPassportFile] = useState(null);
-  
-  const [ setCountry] = useState("");
-  // ===== Wards Data =====
-  const [wardsData, setWardsData] = useState({});
-  const [loadingWards, setLoadingWards] = useState(true);
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
-  // ===== Transform local JSON into usable wardsData =====
+
+
+  // Loading States for Locations
+  const [loadingStates, setLoadingStates] = useState(false);
+  const [loadingLgas, setLoadingLgas] = useState(false);
+  const [loadingWardsApi, setLoadingWardsApi] = useState(false);
+  const [loadingPollingUnits, setLoadingPollingUnits] = useState(false);
+
+  // 1. Fetch Profile and Initial States
   useEffect(() => {
-    const transformed = {};
-    nigeriaWards.forEach((stateObj) => {
-      const stateName = stateObj.state.trim();
-      transformed[stateName] = {};
-      stateObj.lgas.forEach((lgaObj) => {
-        const lgaName = lgaObj.name.trim();
-        transformed[stateName][lgaName] = lgaObj.wards.map((w) => w.name.trim());
-      });
-    });
-    setWardsData(transformed);
-    setLoadingWards(false);
+    const fetchInitialData = async () => {
+      try {
+        setLoadingStates(true);
+        const statesData = await getStates();
+        setStates(statesData);
+        
+        // After loading states, fetch user profile
+        const token = localStorage.getItem("token");
+         const response = await fetch("https://registration.labourpartynigeria.org.ng:8443/api/Users/my-profile", {
+          // const response = await fetch("https://localhost:44332/api/Users/my-profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+          setFirstName(data.firstName || "");
+          setMiddleName(data.middleName || "");
+          setLastName(data.lastName || "");
+          setDob(data.dob ? data.dob.split("T")[0] : "");
+          setEmail(data.email || "");
+          setPhone(data.phoneNumber || "");
+          setNin(data.nationalId || "");
+          setGender(data.gender || "");
+          setMaritalStatus(data.maritalStatus || "");
+          setOccupation(data.occupation || "");
+          setRegion(data.region || "");
+          setIsCitizen(data.isCitizen || "");
+          setResidentialAddress(data.residentialAddress || "");
+          setIsNigeria(data.country === "Nigeria" ? "Nigeria" : "Other Country");
+          setCountry(data.country || "");
+          setResidenceState(data.residenceState || "");
+          setVoters(data.isVoters || "");
+          setVotersCardNo(data.votersCardNo || "");
+          setMaidenName(data.maidenName || "");
+          
+          // These set triggers for the cascaded useEffects
+          setState(data.state || "");
+          setLga(data.lga || "");
+          setWard(data.ward || "");
+          setPollingUnit(data.pollingUnit || "");
+        }
+      } catch (error) {
+        toast.error("Failed to load profile data");
+      } finally {
+        setLoadingStates(false);
+      }
+    };
+    fetchInitialData();
   }, []);
 
-  const fetchMyProfile = async () => {
-  setLoading(true);
+  // 2. Cascade Logic (Identical to your Register page)
+  useEffect(() => {
+    if (!state) return;
+    const fetchLgas = async () => {
+      setLoadingLgas(true);
+      try {
+        const data = await getLgas(state);
+        setLgas(data);
+      } finally { setLoadingLgas(false); }
+    };
+    fetchLgas();
+  }, [state]);
 
-  try {
-    const token = localStorage.getItem("token");
-    const regId = localStorage.getItem("regId");
+  useEffect(() => {
+    if (!state || !lga) return;
+    const fetchWards = async () => {
+      setLoadingWardsApi(true);
+      try {
+        const data = await getWards(state, lga);
+        setWards(data);
+      } finally { setLoadingWardsApi(false); }
+    };
+    fetchWards();
+  }, [state, lga]);
 
-    if (!token || !regId) {
-      throw new Error("User not authenticated");
+  useEffect(() => {
+    if (!state || !lga || !ward) return;
+    const fetchPollingUnitsData = async () => {
+      setLoadingPollingUnits(true);
+      try {
+        const data = await getPollingUnits(state, lga, ward);
+        setPollingUnits(data);
+      } finally { setLoadingPollingUnits(false); }
+    };
+    fetchPollingUnitsData();
+  }, [state, lga, ward]);
+
+  // Handle Logic Functions (Copy-pasted from Register)
+  const handleNumericInput = (value, setter) => {
+    const cleaned = value.replace(/\D/g, "");
+    if (cleaned.length <= 11) setter(cleaned);
+  };
+
+  const validateAge = (birthDate) => {
+    const today = new Date();
+    const dobDate = new Date(birthDate);
+    let age = today.getFullYear() - dobDate.getFullYear();
+    const m = today.getMonth() - dobDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dobDate.getDate())) age--;
+    return age;
+  };
+
+   // Fixed 'handleNameChange' error
+  const handleNameChange = (setter) => (e) => {
+    const value = e.target.value;
+    if (/^[A-Za-z\s-]*$/.test(value)) {
+      setter(value);
     }
-
-    const response = await fetch(
-      "http://84.247.165.61/LabourParty/api/Users/my-profile",
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || "Failed to fetch profile");
-    }
-
-    setProfile(data);
-  } catch (error) {
-    toast.error(error.message);
-  } finally {
-    setLoading(false);
-  }
-};
-
-useEffect(() => {
-  fetchMyProfile();
-}, []);
-
-// const handleChange = (e) => {
-//   const { name, value } = e.target;
-//   setFormData({ ...formData, [name]: value });
-// };
-
-const [formData, setFormData] = useState({
-  regID: "",
-  firstName: "",
-  middleName: "",
-  lastName: "",
-  dob: "",
-  email: "",
-  phoneNumber: "",
-  nationalId: "",
-  gender: "",
-  maritalStatus: "",
-  isCitizen: "",
-  state: "",
-  lga: "",
-  ward: "",
-  isVoters: "",
-  country: "",
-  passportUrl: "",
-});
-useEffect(() => {
-  if (profile) {
-    setFormData({
-      ...profile,
-      dob: profile.dob?.split("T")[0], // fix date input
-    });
-  }
-}, [profile]);
+  };
 
 
-  // ===== Submit Function =====
   const handleUpdate = async (e) => {
     e.preventDefault();
+
+
+
+
+    if (validateAge(dob) < 18) {
+      toast.error("You must be at least 18 years old.");
+      return;
+    }
+const token = localStorage.getItem("token");
+
+      if (!token) {
+      toast.error("You must be logged in to update your profile.");
+      setLoading(false);
+      return;
+    }
+
+    // --- DEFINE userId HERE ---
+    const decoded = jwtDecode(token);
+    console.log("My Token Data:", decoded);
+    // Usually, .NET APIs store the ID in the 'nameid' or 'sub' claim
+    const userId = decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
+
+    if (!userId) {
+      toast.error("Could not verify user identity from token.");
+      setLoading(false);
+      return;
+    }
     setLoading(true);
-  
     try {
-      const token = localStorage.getItem("token");
-  
-      const response = await fetch(
-        "https://govtregistrationapi.onrender.com/api/Registration/update",
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(formData),
-        }
-      );
-  
-      const data = await response.json();
-  
-      if (!response.ok) {
-        throw new Error(data.message || "Update failed");
+      
+      const formData = new FormData();
+      formData.append("RegId", userId);
+      formData.append("FirstName", firstName.trim());
+      formData.append("MiddleName", middleName.trim());
+      formData.append("LastName", lastName.trim());
+      formData.append("DOB", dob);
+      formData.append("Email", email.trim());
+      formData.append("PhoneNumber", phone.trim());
+      formData.append("NationalId", nin.trim());
+      formData.append("Gender", gender);
+      formData.append("MaritalStatus", maritalStatus);
+      formData.append("Region", region);
+      formData.append("Occupation", occupation);
+      formData.append("PollingUnit", pollingUnit);
+      formData.append("ResidentialAddress", residentialAddress);
+      formData.append("MaidenName", maidenName);
+      formData.append("IsCitizen", isCitizen);
+      formData.append("State", isCitizen === "Yes" ? state : "");
+      formData.append("LGA", isCitizen === "Yes" ? lga : "");
+      formData.append("Ward", isCitizen === "Yes" ? ward : "");
+      formData.append("IsVoters", isVoters);
+      if (isVoters === "Yes") formData.append("VotersCardNo", votersCardNo);
+      formData.append("Country", isNigeria === "Nigeria" ? "Nigeria" : country);
+      if (isNigeria === "Nigeria") formData.append("ResidenceState", residenceState);
+      if (passportFile) formData.append("PassportUrl", passportFile);
+
+       const response = await fetch("https://registration.labourpartynigeria.org.ng:8443/api/Users/update", {
+      //const response = await fetch("https://localhost:44332/api/Users/update", {
+      
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      if (response.ok) {
+        toast.success("Profile updated successfully!");
+      } else {
+        const errData = await response.json();
+        toast.error(errData.message || "Update failed");
       }
-  
-      toast.success(data.message || "Profile updated successfully");
     } catch (error) {
-      toast.error(error.message);
+      toast.error("An error occurred");
     } finally {
       setLoading(false);
     }
@@ -158,447 +256,301 @@ useEffect(() => {
   return (
     <>
       <Navbar active="update-details" />
-      
-      {/* Toast Container - Required for notifications */}
       <ToastContainer />
-
       <div className="container pt-4 pb-5">
-         <div className="text-center mb-5 d-flex flex-column align-items-center">
-          {/* LOGO */}
-          <img src={logo} alt="Labour Party Logo" className="img-fluid mb-3" style={{ maxHeight: "110px" }} />
-
-          {/* PARTY NAME */}
-          <h1 className="fw-bold mb-1" style={{ letterSpacing: "1px" }}>Labour Party (LP)</h1>
-
-          {/* MOTTO */}
-          <div className="mb-2 px-3 py-1 rounded" style={{ backgroundColor: "#19875415", color: "#198754", fontWeight: "500", fontSize: "14px" }}>
-            MOTTO: EQUAL OPPORTUNITY AND SOCIAL JUSTICE
-          </div>
-
-          {/* PORTAL TITLE */}
-          <h5 className="text-muted mb-3" style={{ fontWeight: "500" }}>LABOUR PARTY E-MEMBERSHIP REGISTRATION PORTAL</h5>
-
-          {/* DIVIDER */}
-          <div style={{ width: "260px", height: "1px", backgroundColor: "#198754", borderRadius: "10px", marginBottom: "15px" }} />
-
-          {/* ADDRESS */}
-          <h6 className="text-muted mb-1" style={{ lineHeight: "1.5" }}>
-            Labour Party National Secretariat,<br />
-            2 IBM Haruna Street, Utako, Abuja FCT
-          </h6>
-
-          {/* CONTACT INFO */}
-          <div className="d-flex justify-content-center align-items-center gap-4 mt-3" style={{ fontSize: "14px" }}>
-            <div className="d-flex align-items-center gap-2 text-muted">
-              <FaPhoneAlt size={16} color="#198754" />
-              <span> 07041004783, 08111114742</span>
-            </div>
-            <div className="d-flex align-items-center gap-2 text-muted">
-              <a href="mailto:NationalSecretariat@LabourPartyNigeria.org.ng" className="d-flex align-items-center gap-2 text-muted text-decoration-none">
-                <FaEnvelope size={16} color="#198754" />
-                <span>NationalSecretariat@LabourPartyNigeria.org.ng</span>
-              </a>
-            </div>
-          </div>
+        <div className="text-center mb-4">
+          <img src={logo} alt="LP" style={{ maxHeight: "100px" }} />
+          <h2 className="fw-bold mt-2">Update Membership Details</h2>
         </div>
-        <div
-          className="card shadow-sm mx-auto position-relative"
-          style={{ maxWidth: "900px", overflow: "hidden" }}
-        >
-          {/* Watermark */}
-          <div
-            style={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              width: "500px",
-              height: "500px",
-              opacity: 0.05,
-              zIndex: 0,
-              pointerEvents: "none",
-              backgroundImage: `url(${logo})`,
-              backgroundSize: "contain",
-              backgroundRepeat: "no-repeat",
-              backgroundPosition: "center",
-            }}
-          />
- {loading && (
-  <div className="d-flex justify-content-center align-items-center vh-100">
-    <div className="spinner-border text-primary" style={{ width: 80, height: 80 }} />
+
+        <div className="card shadow-sm mx-auto" style={{ maxWidth: "900px" }}>
+          <div className="card-body">
+            <form onSubmit={handleUpdate}>
+               <h6 className="fw-bold mb-3">Personal Details</h6>
+                
+                <div className="row g-3 mb-3">
+                  <div className="col-md-6">
+                    <label className="form-label fw-medium">First Name *</label>
+                    <input type="text" className="form-control" placeholder="First Name" value={firstName} onChange={handleNameChange(setFirstName)} />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-medium">Middle Name</label>
+                    <input type="text" className="form-control" placeholder="Middle Name" value={middleName} onChange={handleNameChange(setMiddleName)} />
+                  </div>
+                </div>
+
+                <div className="row g-3 mb-3">
+                  <div className="col-md-6">
+                    <label className="form-label fw-medium">Last Name *</label>
+                    <input type="text" className="form-control" placeholder="Last Name" value={lastName} onChange={handleNameChange(setLastName)}/>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-medium">Email Address *</label>
+                    <input type="email" className="form-control" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} />
+                  </div>
+                </div>
+
+                <div className="row g-3 mb-3">
+                 <div className="col-md-6">
+                    <label className="form-label fw-medium">Residential Address *</label>
+                    <input className="form-control" placeholder="Enter Residential Address" value={residentialAddress} onChange={(e) => setResidentialAddress(e.target.value)} />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-medium">Occupation *</label>
+                    <select className="form-select" value={occupation} onChange={(e) => setOccupation(e.target.value)}>
+                      <option value="">Select Occupation</option>
+                      <option value="Government Workers">Government Workers</option>
+                      <option value="Private Sector">Private Sector</option>
+                      <option value="Self Employed">Self Employed</option>
+                      <option value="Unemployed">Unemployed</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="row g-3 mb-3">
+                  <div className="col-md-6">
+                    <label className="form-label fw-medium">Select Region *</label>
+                    <select className="form-select" value={region} onChange={(e) => setRegion(e.target.value)}>
+                      <option value="">Select Region</option>
+                      <option value="North Central">North Central</option>
+                      <option value="North East">North East</option>
+                      <option value="North West">North West</option>
+                      <option value="South East">South East</option>
+                      <option value="South South">South South</option>
+                      <option value="South West">South West</option>
+                      <option value="Abuja (FCT)">Abuja (FCT)</option>
+                    </select>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-medium">Date of Birth *</label>
+                    <input type="date" className="form-control" value={dob} onChange={(e) => setDob(e.target.value)}/>
+                  </div>
+                </div>
+
+                
+                <div className="row g-3 mb-3">
+                  <div className="col-md-6">
+                    <label className="form-label fw-medium">Phone Number *</label>
+                    <input className="form-control" placeholder="11-digit phone number" value={phone} onChange={(e) => handleNumericInput(e.target.value, setPhone)} />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-medium">National Identity Number(NIN) *</label>
+                    <input className="form-control" placeholder="11-digit NIN" value={nin} onChange={(e) => handleNumericInput(e.target.value, setNin)} />
+                  </div>
+                </div>
+
+                <div className="row g-3 mb-3">
+  <div className="col-md-6">
+    <label className="form-label fw-medium">Gender *</label>
+    <select className="form-select" value={gender} onChange={(e) => setGender(e.target.value)}>
+      <option value="">Select Gender</option>
+      <option value="Male">Male</option>
+      <option value="Female">Female</option>
+    </select>
+  </div>
+  <div className="col-md-6">
+    <label className="form-label fw-medium">Marital Status *</label>
+    <select className="form-select" value={maritalStatus} onChange={(e) => setMaritalStatus(e.target.value)}>
+      <option value="">Select Marital Status</option>
+      <option value="Single">Single</option>
+      <option value="Married">Married</option>
+      <option value="Divorced">Divorced</option>
+      <option value="Widow">Widow</option>
+      <option value="Widower">Widower</option>
+    </select>
+  </div>
+</div>
+
+{/* Only show this row if Female AND Married */}
+{gender === "Female" && maritalStatus === "Married" && (
+  <div className="row g-3 mb-3">
+    <div className="col-md-12">
+      <label className="form-label fw-medium">Maiden's Name</label>
+      <input 
+        className="form-control" 
+        placeholder="Enter Maiden Name" 
+        value={maidenName} 
+        onChange={(e) => setMaidenName(e.target.value)} 
+      />
+    </div>
   </div>
 )}
-          <div className="card-body position-relative" style={{ zIndex: 1 }}>
-            <form onSubmit={handleUpdate}>
-              {/* Personal Details */}
-              <h6 className="fw-bold mb-3">Personal Details</h6>
-              <div className="row g-3 mb-3">
-                <div className="col-md-6">
-                  <label className="form-label fw-medium">FirstName</label>
-                  <input
-                    className="form-control"
-                    placeholder="First Name"
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                    required
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label fw-medium">Middle Name</label>
-                  <input
-                    className="form-control"
-                    placeholder="Middle Name"
-                    value={formData.middleName}
-                    onChange={(e) => setFormData({...formData, middleName: e.target.value})}
-                  />
-                </div>
-              </div>
 
-              <div className="row g-3 mb-3">
-                <div className="col-md-6">
-                  <label className="form-label fw-medium">Last Name</label>
-                  <input
-                    className="form-control"
-                    placeholder="Last Name"
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                    required
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label fw-medium">Email Address</label>
-                  <input
-                    type="email"
-                    className="form-control"
-                    placeholder="Email address"
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="row g-3 mb-3">
-                <div className="col-md-6">
-                  <label className="form-label fw-medium">Date of Birth</label>
-                  <input
-                    type="date"
-                    className="form-control"
-                    value={formData.dob}
-                    onChange={(e) => setFormData({...formData, dob: e.target.value})}
-                    required
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label fw-medium">
-                    Do you reside in Nigeria?
-                  </label>
-                  <select
-                    className="form-select"
-                    value={formData.isCitizen}
-                    onChange={(e) => {
-                      setFormData({...formData, isCitizen: e.target.value});
-                      setState("");
-                      setLga("");
-                      setWard("");
-                      setCountry("");
-                    }}
-                    required
-                  >
-                    <option value="">Do you reside in Nigeria?</option>
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* State / LGA / Ward */}
-              {isCitizen === "Yes" && (
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
-                    <label className="form-label fw-medium">State of Origin</label>
-                    <select
-                      className="form-select"
-                      value={formData.state}
-                      onChange={(e) => {
-                        setFormData({...formData, state: e.target.value});
-                        setLga("");
-                        setWard("");
-                      }}
-                      required
-                    >
-                      <option value="">Select State of origin</option>
-                      {Object.keys(nigeriaStatesLGA).map((stateName) => (
-                        <option key={stateName} value={stateName}>
-                          {stateName}
-                        </option>
-                      ))}
+                    <label className="form-label fw-medium">Do you reside in Nigeria? *</label>
+                    <select className="form-select" value={isCitizen} onChange={(e) => { setIsCitizen(e.target.value); setState(""); setLga(""); setWard(""); setCountry(""); }}>
+                      <option value="">Do you reside in Nigeria?</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
                     </select>
                   </div>
-
                   <div className="col-md-6">
-                    <label className="form-label fw-medium">
-                      Local Government Area (LGA)
-                    </label>
-                    <select
-                      className="form-select"
-                      value={formData.lga}
-                      onChange={(e) => setFormData({...formData, lga: e.target.value})}
-                      disabled={!formData.state}
-                      required
-                    >
-                      <option value="">Select LGA</option>
-                      {formData.state &&
-                        nigeriaStatesLGA[formData.state].map((lgaName) => (
-                          <option key={lgaName} value={lgaName}>
-                            {lgaName}
-                          </option>
-                        ))}
-                    </select>
-                  </div>
-
-                  <div className="col-md-6">
-                    <label className="form-label fw-medium">Ward</label>
-                    <select
-                      className="form-select"
-                      value={formData.ward}
-                      onChange={(e) => setFormData({...formData, ward: e.target.value})}
-                      disabled={!formData.state || !formData.lga || loadingWards}
-                      required
-                    >
-                      <option value="">
-                        {loadingWards ? "Loading wards..." : "Select Ward"}
-                      </option>
-                      {formData.state && formData.lga && wardsData[formData.state] && wardsData[formData.state][formData.lga]
-                        ? wardsData[formData.state][formData.lga].map((wardName) => (
-                            <option key={wardName} value={wardName}>
-                              {wardName}
-                            </option>
-                          ))
-                        : null}
+                    <label className="form-label fw-medium">Do you have a voters card? *</label>
+                    <select className="form-select" value={isVoters} onChange={(e) => setVoters(e.target.value)}>
+                      <option value="">Do you have a voters card?</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
                     </select>
                   </div>
                 </div>
-              )}
 
-              <div className="row g-3 mb-3">
-                <div className="col-md-6">
-                  <label className="form-label fw-medium">Phone Number</label>
-                  <input
-                    className="form-control"
-                    placeholder="Phone number"
-                    value={formData.phoneNumber}
-                    onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})}
-                    required
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label fw-medium">
-                    National Identity Number(NIN)
-                  </label>
-                  <input
-                    className="form-control"
-                    placeholder="National Identity Number"
-                    value={formData.nationalId}
-                    onChange={(e) => setFormData({...formData, nationalId: e.target.value})}
-                    required
-                  />
-                </div>
-              </div>
+                {isVoters === "Yes" && (
+                  <div className="row g-3 mb-3">
+                    <div className="col-md-6">
+                      <label className="form-label fw-medium">Voter's Card Number</label>
+                      <input className="form-control" placeholder="11-digit Voter's Card No." value={votersCardNo} onChange={(e) => handleNumericInput(e.target.value, setVotersCardNo)} />
+                    </div>
+                  </div>
+                )}
 
-              {/* Gender & Marital Status - FIXED */}
-              <div className="row g-3 mb-3">
-                <div className="col-md-6">
-                  <label className="form-label fw-medium">Gender *</label>
-                  <select
-                    className="form-select"
-                    value={formData.gender}
-                    onChange={(e) => setFormData({...formData, gender: e.target.value})}
-                    required
-                  >
-                    <option value="">Select Gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                  </select>
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label fw-medium">Marital Status *</label>
-                  <select
-                    className="form-select"
-                    value={formData.maritalStatus}
-                    onChange={(e) => setFormData({...formData, maritalStatus: e.target.value})}
-                    required
-                  >
-                    <option value="">Select Marital Status</option>
-                    <option value="Single">Single</option>
-                    <option value="Married">Married</option>
-                    <option value="Divorced">Divorced</option>
-                    <option value="Widow">Widow</option>
-                    <option value="Widower">Widower</option>
-                  </select>
-                </div>
-              </div>
+               {/* STATE, LGA, WARD ROW */}
+{isCitizen === "Yes" && (
+  <>
+    <div className="row g-3 mb-3">
+      <div className="col-md-4">
+        <label className="form-label fw-medium">State of Origin *</label>
+        <select className="form-select" value={state} onChange={(e) => { setState(e.target.value); setLga(""); setWard(""); }} required>
+          <option value="">{loadingStates ? "Loading..." : "Select State"}</option>
+          {states.map((s) => (<option key={s} value={s}>{s}</option>))}
+        </select>
+      </div>
+      <div className="col-md-4">
+        <label className="form-label fw-medium">LGA</label>
+        <select className="form-select" value={lga} onChange={(e) => setLga(e.target.value)} disabled={!state || loadingLgas} required>
+          <option value="">{loadingLgas ? "Loading..." : "Select LGA"}</option>
+          {lgas.map((l) => (<option key={l} value={l}>{l}</option>))}
+        </select>
+      </div>
+      <div className="col-md-4">
+        <label className="form-label fw-medium">Ward</label>
+        <select className="form-select" value={ward} onChange={(e) => setWard(e.target.value)} disabled={!lga || loadingWardsApi} required>
+          <option value="">{loadingWardsApi ? "Loading..." : "Select Ward"}</option>
+          {wards.map((w) => (<option key={w} value={w}>{w}</option>))}
+        </select>
+      </div>
+    </div>
 
-              {/* Voter & Membership */}
-              <div className="row g-3 mb-3">
-                <div className="col-md-6">
-                  <label className="form-label fw-medium">
-                    Do you have a voters card?
-                  </label>
-                  <select
-                    className="form-select"
-                    value={formData.isVoters}
-                    onChange={(e) => setFormData({...formData, isVoters: e.target.value})}
-                    required
-                  >
-                    <option value="">Do you have a voters card?</option>
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                  </select>
-                </div>
-
-                <div className="col-md-6">
-                  <label className="form-label fw-medium">Country of Residence</label>
-                  <select
-                    className="form-select"
-                    value={formData.country}
-                    onChange={(e) => setFormData({...formData, country: e.target.value})}
-                    required
-                  >
-                    <option value="">Select country of residence</option>
-                    <option value="Nigeria">Nigeria</option>
-                    <option value="Other Country">Other Country</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Voters Card Number - Shows when Yes is selected */}
-              {isVoters === "Yes" && (
+    {/* ONLY SHOW POLLING UNIT AFTER WARD IS SELECTED */}
+    {ward && (
+      <div className="row g-3 mb-3">
+        <div className="col-md-12">
+          <label className="form-label fw-medium">Polling Unit</label>
+          <select
+            className="form-select"
+            value={pollingUnit}
+            onChange={(e) => setPollingUnit(e.target.value)}
+            disabled={loadingPollingUnits}
+            required
+          >
+            <option value="">
+              {loadingPollingUnits ? "Loading Units..." : "Select Polling Unit"}
+            </option>
+            {pollingUnits.map((pu) => (
+              <option key={pu} value={pu}>{pu}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+    )}
+  </>
+)}
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
-                    <label className="form-label fw-medium">Voter's Card Number</label>
-                    <input
-                      className="form-control"
-                      placeholder="Enter Voter's Card No."
-                      value={formData.votersCardNo}
-                      onChange={(e) => setFormData({...formData, votersCardNo: e.target.value})}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* If user selects Nigeria */}
-              {isNigeria === "Nigeria" && (
-                <div className="row g-3 mb-3">
-                  <div className="col-md-6">
-                    <label className="form-label fw-medium">State of Residence</label>
-                    <select
-                      className="form-select"
-                      value={formData.residenceState}
-                      onChange={(e) => setFormData({...formData, residenceState: e.target.value})}
-                      required
-                    >
-                      <option value="">Select State</option>
-                      {Object.keys(onlyStates).map((stateName) => (
-                        <option key={stateName} value={stateName}>
-                          {stateName}
-                        </option>
-                      ))}
+                    <label className="form-label fw-medium">Country of Residence *</label>
+                    <select className="form-select" value={isNigeria} onChange={(e) => setIsNigeria(e.target.value)} required>
+                      <option value="">Select country of residence</option>
+                      <option value="Nigeria">Nigeria</option>
+                      <option value="Other Country">Other Country</option>
                     </select>
                   </div>
-                </div>
-              )}
-
-              {/* If user selects Other Country */}
-              {isNigeria === "Other Country" && (
-                <div className="row g-3 mb-3">
-                  <div className="col-md-6">
-                    <label className="form-label fw-medium">Country of Residence</label>
-                    <select
-                      className="form-select"
-                      value={formData.countryOfResidence}
-                      onChange={(e) => setFormData({...formData, countryOfResidence: e.target.value})}
-                      required
-                    >
-                      <option value="">Select your Country</option>
-                      <option value="Ghana">Ghana</option>
-                      <option value="Cameroon">Cameroon</option>
-                      <option value="USA">USA</option>
-                      <option value="UK">UK</option>
-                      <option value="Others">Others</option>
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              {/* Passport Upload */}
-              <div className="mb-3">
-                <label className="form-label fw-bold">
-                  Upload Passport Photograph
-                </label>
-                <input
-                  type="file"
-                  className="form-control"
-                  accept="image/*"
-                  onChange={(e) => setPassportFile(e.target.files[0])}
-                  required
-                />
-              </div>
-
-              {/* Terms */}
-              <div className="mb-3">
-                <div className="form-check">
-                  <input
-                    type="checkbox"
-                    className="form-check-input"
-                    id="terms"
-                    checked={agreed}
-                    onChange={(e) => setAgreed(e.target.checked)}
-                    required
-                  />
-                  <label className="form-check-label" htmlFor="terms">
-                    I agree to the terms and conditions
-                  </label>
-                </div>
-              </div>
-
-              {/* Register Button */}
-              <div className="d-grid mb-3">
-                <button
-                  type="submit"
-                  className="btn btn-success btn-lg"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <span
-                        className="spinner-border spinner-border-sm me-2"
-                        role="status"
-                        aria-hidden="true"
-                      ></span>
-                      Updating,Please Wait...
-                    </>
-                  ) : (
-                    "Update Details"
+                  {isNigeria === "Nigeria" && (
+  <div className="col-md-6">
+    <label className="form-label fw-medium">State of Residence *</label>
+    <select 
+      className="form-select" 
+      value={residenceState} 
+      onChange={(e) => setResidenceState(e.target.value)} 
+      required
+    >
+      <option value="">
+        {loadingStates ? "Loading..." : "Select State"}
+      </option>
+      {states.map((s) => (
+        <option key={s} value={s}>{s}</option>
+      ))}
+    </select>
+  </div>
+)}
+                  {isNigeria === "Other Country" && (
+                    <div className="col-md-6">
+                      <label className="form-label fw-medium">Country Name *</label>
+                      <select className="form-select" value={country} onChange={(e) => setCountry(e.target.value)} required>
+                        <option value="">Select Country</option>
+                        <option value="Ghana">Ghana</option>
+                        <option value="Cameroon">Cameroon</option>
+                        <option value="USA">USA</option>
+                        <option value="UK">UK</option>
+                        <option value="Others">Others</option>
+                      </select>
+                    </div>
                   )}
-                </button>
-              </div>
+                </div>
 
-              <p className="text-muted small">
-                Note: This is a pre-membership registration form. You will be
-                contacted by your Local Government / Ward Representative once
-                your membership registration is approved and ready for pickup.
-              </p>
-            </form>
-          </div>
+                <div className="mb-3">
+                  <label className="form-label fw-bold">Upload Passport Photograph *</label>
+                  <input type="file" className="form-control" accept="image/*" onChange={(e) => setPassportFile(e.target.files[0])} required />
+                </div>
+
+              <div className="form-check mb-4 mt-3">
+          <input
+            type="checkbox"
+            className="form-check-input"
+            id="termsCheck"
+            required
+            checked={agreed} onChange={(e) => setAgreed(e.target.checked)} 
+          />
+          <label className="form-check-label small" htmlFor="termsCheck">
+            I agree to the{" "}
+            <span 
+              className="text-success fw-bold" 
+              style={{ cursor: "pointer", textDecoration: "underline" }}
+              // Trigger the modal instead of navigating
+              onClick={() => setShowTermsModal(true)} 
+            >
+              Terms and Conditions *
+            </span>{" "}
+            and Privacy Policy.
+          </label>
         </div>
 
-        {/* Show ID Card after successful registration */}
-        {registeredUser && (
-          <div className="mt-4">
-            <IDCard user={registeredUser} />
+      {/* --- THE MODAL --- */}
+      <Modal 
+        show={showTermsModal} 
+        onHide={() => setShowTermsModal(false)} 
+        size="lg" 
+        centered 
+        scrollable
+      >
+        <Modal.Header closeButton className="border-0 pb-0">
+          <Modal.Title className="fw-bold">Legal Agreements</Modal.Title>
+        </Modal.Header>
+        
+        <Modal.Body className="p-0">
+          {/* We pass a prop so the component knows it's inside a modal */}
+          <TermsAndConditions isModal={true} closeModal={() => setShowTermsModal(false)} />
+        </Modal.Body>
+      </Modal>
+
+                <div className="d-grid mb-3">
+                  <button type="submit" className="btn btn-success btn-lg" disabled={loading}>
+                    {loading ? <span className="spinner-border spinner-border-sm me-2"></span> : "Update Details"}
+                  </button>
+                </div>
+
+                <p className="text-muted small">Note: This is a pre-membership registration form. You will be contacted by your Local Government / Ward Representative once your membership registration is approved and ready for pickup.</p>            </form>
           </div>
-        )}
+        </div>
       </div>
     </>
   );

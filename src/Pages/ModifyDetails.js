@@ -17,7 +17,9 @@ const ModifyDetails = () => {
   const navigate = useNavigate();
   const { minutes, seconds, expired, startTimer } = useOtpTimer(600);
 
-  const API_BASE = "http://84.247.165.61/LabourParty/api/Users";
+   const API_BASE = "https://registration.labourpartynigeria.org.ng:8443/api/Users";
+   //const API_BASE = "https://localhost:44332/api/Users";
+
 
   // ===== Refactored Send/Resend OTP Logic =====
   const handleSendOtp = async (isResend = false) => {
@@ -28,7 +30,10 @@ const ModifyDetails = () => {
 
     try {
       // 1. Verify the RegID exists (only strictly necessary on first attempt, but safe to keep)
-      const verifyRes = await fetch(`${API_BASE}/verify/${regId}`);
+
+  
+const verifyRes = await fetch(`${API_BASE}/verify?regId=${encodeURIComponent(regId.trim())}`);
+      ///const verifyRes = await fetch(`${API_BASE}/verify/${regId}`);
       const verifyData = await verifyRes.json();
 
       if (!verifyRes.ok) throw new Error(verifyData.message || "Invalid Registration ID");
@@ -66,8 +71,14 @@ const ModifyDetails = () => {
   const handleVerifyOtp = async () => {
     if (!otp) return toast.error("Please enter the OTP");
     setLoading(true);
-
+// 2. Limit to exactly 6 digits
+    if (otp.length !== 6) {
+      setLoading(false)
+        return toast.error("OTP must be exactly 6 digits");
+        
+    }
     try {
+      setLoading(true)
       const response = await fetch(`${API_BASE}/verify-email-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -98,7 +109,7 @@ const ModifyDetails = () => {
             <>
               <p className="text-muted small mb-3">Enter your Registration ID to receive a verification code.</p>
               <input
-                type="number"
+              type="text"
                 className="form-control mb-3"
                 placeholder="Registration ID"
                 value={regId}
@@ -118,11 +129,18 @@ const ModifyDetails = () => {
             <>
               <p className="text-muted small mb-1">Enter the code sent to {userEmail.replace(/(.{3})(.*)(?=@)/, "$1***")}</p>
               <input
+              maxLength={6}
                 type="number"
                 className="form-control mb-2"
-                placeholder="Enter OTP"
+                placeholder="Enter OTP(e.g 123456)"
                 value={otp}
-                onChange={(e) => setOtp(e.target.value)}
+               onChange={(e) => {
+    const value = e.target.value;
+    // Only allow numbers
+    if (/^\d*$/.test(value)) {
+      setOtp(value);
+    }
+  }}
               />
               
               <div className="d-flex justify-content-between align-items-center mb-3">

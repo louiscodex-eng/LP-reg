@@ -51,6 +51,65 @@ useEffect(() => {
 
 const [registeredUser, setRegisteredUser] = useState(null);
 
+
+const exportAllToExcel = async () => {
+  setLoading(true);
+  try {
+    const token = localStorage.getItem("token");
+    // We call a new endpoint (or the existing one without page/pageSize)
+    // const response = await fetch("https://localhost:44332/api/Admin/all-users", {
+     const response = await fetch("https://registration.labourpartynigeria.org.ng:8443/api/Admin/all-users", {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (!response.ok) throw new Error("Failed to fetch all records");
+
+    const allUsers = await response.json();
+
+    if (allUsers.length === 0) {
+      toast.warning("No data available to export");
+      return;
+    }
+
+    // Prepare data (Mapping all users)
+    const excelData = allUsers.map(user => ({
+      "Registration ID": `LP/${user.regID}`,
+      "First Name": user.firstName,
+      "Middle Name": user.middleName || '',
+      "Last Name": user.lastName,
+      "Email": user.email,
+      "Phone": user.phoneNumber,
+      "State": user.state,
+      "LGA": user.lga,
+      "Ward": user.ward,
+      "Polling Unit": user.pollingUnit || "N/A",
+      "Address": user.residentialAddress,
+      "Gender": user.gender,
+      "Date of Birth": user.dob ? new Date(user.dob).toLocaleDateString() : "N/A"
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "All_Registered_Users");
+
+    const fileName = `Full_Database_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+    
+    toast.success(`Successfully exported ${allUsers.length} records!`);
+  } catch (error) {
+    console.error("Export Error:", error);
+    toast.error("Could not download all records. Check server connection.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 const handleRegistrationSuccess = (userData) => {
   setRegisteredUser(userData);
   setIsCreated(true);
@@ -115,9 +174,12 @@ const exportToExcel = () => {
   // Determine if we are searching (POST) or fetching all (GET)
   const isFiltered = Object.values(filters).some(val => val !== "");
   
-  const url = isFiltered 
-    ? "http://84.247.165.61/LabourParty/api/Admin/search"
-    : `http://84.247.165.61/LabourParty/api/Admin/users?page=${pageNumber}&pageSize=10`;
+ const url = isFiltered 
+    ? "https://registration.labourpartynigeria.org.ng:8443/api/Admin/search"
+    : `https://registration.labourpartynigeria.org.ng:8443/api/Admin/users?page=${pageNumber}&pageSize=10`;
+  // const url = isFiltered 
+  //   ? "https://localhost:44332/api/Admin/search"
+  //   : `https://localhost:44332/api/Admin/users?page=${pageNumber}&pageSize=10`;
 
   try {
     const response = await fetch(url, {
@@ -166,6 +228,8 @@ const exportToExcel = () => {
       membershipId: "",
       region: "",
       state: "",
+      email: "",        
+    phoneNumber: "",  
       lga: "",
       ward: "",
       pollingUnit: "",
@@ -183,7 +247,8 @@ const exportToExcel = () => {
     const fetchStats = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch("http://84.247.165.61/LabourParty/api/Admin/dashboard-stats", {
+        const response = await fetch("https://registration.labourpartynigeria.org.ng:8443/api/Admin/dashboard-stats", {
+      // const response = await fetch("https://localhost:44332/api/Admin/dashboard-stats", {
           method: "GET",
           headers: {
             "Authorization": `Bearer ${token}`, // Assuming your API requires the token
@@ -241,6 +306,8 @@ const exportToExcel = () => {
     membershipId: "",
     region: "",
     state: "",
+    email: "",       
+  phoneNumber: "",
     lga: "",
     ward: "",
     pollingUnit: "",
@@ -287,18 +354,30 @@ const exportToExcel = () => {
               onClick={exportToExcel}
               disabled={loading || users.length === 0}
             >
-              <FaFileDownload className="me-2" /> Export Excel
+              <FaFileDownload className="me-2" /> Export Filtered Records
             </button>
+
+            {/* NEW: Export All Records Button */}
+  {isNational && (
+    <button
+      className="btn btn-outline-success shadow-sm"
+      onClick={exportAllToExcel}
+      disabled={loading}
+    >
+      <FaFileDownload className="me-2" /> Export All Records
+    </button>
+  )}
             {hasWriteAccess && (
               <button className="btn btn-success shadow-sm" onClick={() => openRegisterModal("registerUser")}>
                 <FaUserPlus className="me-2" /> Register User
               </button>
             )}
-            {isNational && (
-              <button className="btn btn-success shadow-sm" onClick={() => openRegisterModal("addAdmin")}>
-                <FaUserCog className="me-2" /> Add Admin
-              </button>
-            )}
+           {/* UPDATED: Only show if user is National AND has Write Access */}
+  {isNational && hasWriteAccess && (
+    <button className="btn btn-success shadow-sm" onClick={() => openRegisterModal("addAdmin")}>
+      <FaUserCog className="me-2" /> Add Admin
+    </button>
+  )}
           </div>
         </div>
 
@@ -330,7 +409,28 @@ const exportToExcel = () => {
               {showFilters && (
                 <div className="filter-grid">
                   <label className="small fw-bold text-muted mb-1">Membership ID</label>
-                  <input type="text" name="membershipId" className="form-control form-control-sm mb-2" placeholder="994432XXX" onChange={handleInputChange} />
+                  <input type="text" name="membershipId" className="form-control form-control-sm mb-2" placeholder="AB/KAD/XXX" onChange={handleInputChange} />
+                    {/* ADDED: Email Field */}
+                  <label className="small fw-bold text-muted mb-1">Email Address</label>
+    <input 
+      type="email" 
+      name="email" 
+      value={filters.email} 
+      className="form-control form-control-sm mb-2" 
+      placeholder="user@example.com" 
+      onChange={handleInputChange} 
+    />
+
+    {/* ADDED: Phone Number Field */}
+    <label className="small fw-bold text-muted mb-1">Phone Number</label>
+    <input 
+      type="text" 
+      name="phoneNumber" 
+      value={filters.phoneNumber} 
+      className="form-control form-control-sm mb-2" 
+      placeholder="080123..." 
+      onChange={handleInputChange} 
+    />
 
                   <div className="row g-2 mb-2">
                     {adminRole === "National" && (
@@ -507,8 +607,8 @@ const exportToExcel = () => {
             <div className="text-center p-3">
               <div className="alert alert-success fw-bold">USER REGISTERED SUCCESSFULLY!</div>
               <div className="d-flex justify-content-center border p-3 rounded bg-white shadow-sm">
-                <IDCard user={registeredUser} />
-              </div>
+  {registeredUser ? <IDCard user={registeredUser} /> : <Spinner animation="border" />}
+</div>
               <button className="btn btn-success mt-4 px-5" onClick={() => { setIsCreated(false); setShowModal(false); }}>
                 Done & Close
               </button>

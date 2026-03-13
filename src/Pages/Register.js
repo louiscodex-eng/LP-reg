@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import logo from "../logo2.png";
+import logo from "../logo2.jpeg";
 import Navbar from "../components/Navbar";
 import IDCard from "../components/IDCard";
 import { FaPhoneAlt, FaEnvelope,FaInfoCircle } from "react-icons/fa";
@@ -104,13 +104,18 @@ const [loadingLgas, setLoadingLgas] = useState(false);         // Fixed
 const [loadingStates, setLoadingStates] = useState(false);
 const [loadingPollingUnits, setLoadingPollingUnits] = useState(false);
  // const [loadingWards] = useState(true);
-  const validateAge = (birthDate) => {
+ const calculateAge = (birthDate) => {
+  if (!birthDate) return 0;
+
   const today = new Date();
   const dob = new Date(birthDate);
+
+  // Return null if the date is in the future
+  if (dob > today) return null;
+
   let age = today.getFullYear() - dob.getFullYear();
   const monthDiff = today.getMonth() - dob.getMonth();
 
-  // Adjust age if birthday hasn't happened yet this year
   if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
     age--;
   }
@@ -204,105 +209,85 @@ useEffect(() => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Specific Validation for 11 digits
-    if (phone.length !== 11) {
-      toast.error("Phone number must be 11 digits");
-      return;
-    }
-    if (nin.length !== 11) {
-      toast.error("NIN must be 11 digits");
-      return;
-    }
-    if (isVoters === "Yes" && votersCardNo.length !== 11) {
-      toast.error("Voters Card No must be 11 digits");
-      return;
-    }
+    // Validation checks...
+    if (phone.length !== 11) { toast.error("Phone number must be 11 digits"); return; }
+    if (nin.length !== 11) { toast.error("NIN must be 11 digits"); return; }
+    if (isVoters === "Yes" && votersCardNo.length !== 11) { toast.error("Voters Card No must be 11 digits"); return; }
+     if (dob === "") { toast.error("Please fill date of birth"); return; }
+    const currentAge = calculateAge(dob); // 'dob' is your state variable
 
-    if (validateAge(dob) < 18) {
-    toast.error("Access Denied: You must be at least 18 years old to register.");
-    return; // Stop the registration process
-    }
-   // ===== Inside handleSubmit =====
-// 1. Define the Regex pattern
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (currentAge === null) {
+    return toast.error("Birth date cannot be in the future!");
+  }
 
-// 2. Run the check
-if (!emailRegex.test(email)) {
-    toast.error("Invalid Email: Please enter a correct email address (e.g. name@example.com)");
+  // Example: Minimum age requirement for Nigerian registration
+  if (currentAge < 18) {
+    return toast.error("You must be at least 18 years old to register.");
+  }
     
-    // Focus the email field so the user can fix it immediately
-    const emailInput = document.querySelector('input[type="email"]');
-    if (emailInput) emailInput.focus();
-    
-    return; // CRITICAL: This stops the code from reaching the API call
-}
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) { toast.error("Invalid Email"); return; }
 
-    if (!firstName || !lastName) {
-      toast.error("Please enter your First and Last Name");
+    // Check mandatory fields
+    if (!firstName || !lastName  || !passportFile || !occupation) {
+      toast.error("Please fill all required fields");
       return;
     }
-    if (!occupation) {
-      toast.error("Please select an occupation");
-      return;
-    }
-    if (!region) {
-      toast.error("Please select your region");
-      return;
-    }
-    if (!passportFile) {
-        toast.error("Please upload a passport photograph");
-        return;
-    }
-  
 
     setLoading(true);
 
     try {
       const formData = new FormData();
 
-      // ===== Personal Details =====
-      formData.append("FirstName", firstName);
-      formData.append("MiddleName", middleName);
-      formData.append("LastName", lastName);
+      // ===== Basic Details =====
+      formData.append("FirstName", firstName.trim());
+      formData.append("MiddleName", middleName.trim());
+      formData.append("LastName", lastName.trim());
       formData.append("DOB", dob);
-      formData.append("Email", email);
-      formData.append("PhoneNumber", phone);
-      formData.append("NationalId", nin);
+      formData.append("Email", email.trim());
+      formData.append("PhoneNumber", phone.trim());
+      formData.append("NationalId", nin.trim());
       formData.append("Gender", gender);
       formData.append("MaritalStatus", maritalStatus);
       formData.append("Region", region);
       formData.append("Occupation", occupation);
-      formData.append("PollingUnit", pollingUnit);
       formData.append("ResidentialAddress", residentialAddress);
       formData.append("MaidenName", maidenName);
-
-      // ===== Residency =====
       formData.append("IsCitizen", isCitizen);
-      formData.append("State", isCitizen === "Yes" ? state : "");
-      formData.append("LGA", isCitizen === "Yes" ? lga : "");
-      formData.append("Ward", isCitizen === "Yes" ? ward : "");
+      formData.append("IsVoters", isVoters);
+
+      // ===== Conditional Logic for Diaspora / Citizens =====
+      if (isCitizen === "Yes") {
+        // Only append these if they reside in Nigeria
+        formData.append("State", state);
+        formData.append("LGA", lga);
+        formData.append("Ward", ward);
+        formData.append("PollingUnit", pollingUnit);
+      } 
+      // Note: If isCitizen is "No", we skip the above, 
+      // and the backend will handle them as null.
 
       // ===== Voting =====
-      formData.append("IsVoters", isVoters);
       if (isVoters === "Yes" && votersCardNo) {
         formData.append("VotersCardNo", votersCardNo);
       }
 
-      // ===== Country of Residence =====
-      formData.append("Country", isNigeria === "Nigeria" ? "Nigeria" : country);
-      
-      // ===== State of Residence =====
-      if (isNigeria === "Nigeria" && residenceState) {
-        formData.append("ResidenceState", residenceState);
+      // ===== Country and Residence State =====
+      if (isNigeria === "Nigeria") {
+        formData.append("Country", "Nigeria");
+        if (residenceState) formData.append("ResidenceState", residenceState);
+      } else {
+        formData.append("Country", country);
+        // ResidenceState is not applicable for Other Countries in your current logic
       }
 
       // ===== Passport Upload =====
-      if (passportFile) {
-        formData.append("passport", passportFile);
-      }
+      formData.append("PassportUrl", passportFile);
 
       const response = await fetch(
-        "http://84.247.165.61/LabourParty/api/Users/register",
+        "https://registration.labourpartynigeria.org.ng:8443/api/Users/register",
+       // "https://localhost:44332/api/Users/register",
+        
         {
           method: "POST",
           body: formData,
@@ -312,24 +297,19 @@ if (!emailRegex.test(email)) {
       const data = await response.json();
 
       if (response.ok) {
-        toast.success("Registration successful! Kindly download your membership card below.", {
-          position: "top-right",
-          autoClose: 5000,
-        });
+        toast.success("Registration successful!");
 
-// Combine the server's ID with the current form state
-    const completeUserData = {
-        regID: data.regId, // From server
-        firstName: firstName,
-        lastName: lastName,
-        middleName: middleName,
-        state: state,
-        lga: lga,
-        ward: ward,
-        // Create a local URL for the uploaded image so it displays immediately
-        passportUrl: URL.createObjectURL(passportFile) 
-    };
-
+        const completeUserData = {
+            regID: data.regId,
+            firstName,
+            lastName,
+            middleName,
+            // Display empty strings on the ID card if diaspora
+            state: isCitizen === "Yes" ? state : "DIASPORA",
+            lga: isCitizen === "Yes" ? lga : "N/A",
+            ward: isCitizen === "Yes" ? ward : "N/A",
+            passportUrl: URL.createObjectURL(passportFile) 
+        };
 
         setRegisteredUser(completeUserData);
         resetForm();
@@ -337,12 +317,11 @@ if (!emailRegex.test(email)) {
         toast.error(data.message || "Something went wrong, try again");
       }
     } catch (error) {
-      toast.error("Something went wrong, try again");
+      toast.error("Network error, please check your connection.");
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <>
       <Navbar active="register" />
@@ -379,7 +358,7 @@ if (!emailRegex.test(email)) {
                 <div>
                   <h6 className="fw-bold mb-1">Note:</h6>
                   <p className="small mb-0 opacity-90">
-                    After registration is successful, you can download your card below and also click on <strong>Create/Reset Password</strong> to login to your dashboard.
+                    After registration is successful, you can download your card below and also click on <strong>Create/Reset Password</strong> to login to your dashboard. Also copy the REG-IG <strong>AB/GEG/XXX</strong> at the top of the IDCard, you will need it to create your password
                   </p>
                 </div>
               </div>
@@ -404,7 +383,7 @@ if (!emailRegex.test(email)) {
                 
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
-                    <label className="form-label fw-medium">First Name</label>
+                    <label className="form-label fw-medium">First Name *</label>
                     <input type="text" className="form-control" placeholder="First Name" value={firstName} onChange={handleNameChange(setFirstName)} />
                   </div>
                   <div className="col-md-6">
@@ -415,22 +394,22 @@ if (!emailRegex.test(email)) {
 
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
-                    <label className="form-label fw-medium">Last Name</label>
+                    <label className="form-label fw-medium">Last Name *</label>
                     <input type="text" className="form-control" placeholder="Last Name" value={lastName} onChange={handleNameChange(setLastName)}/>
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label fw-medium">Email Address</label>
+                    <label className="form-label fw-medium">Email Address *</label>
                     <input type="email" className="form-control" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} />
                   </div>
                 </div>
 
                 <div className="row g-3 mb-3">
                  <div className="col-md-6">
-                    <label className="form-label fw-medium">Residential Address</label>
+                    <label className="form-label fw-medium">Residential Address *</label>
                     <input className="form-control" placeholder="Enter Residential Address" value={residentialAddress} onChange={(e) => setResidentialAddress(e.target.value)} />
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label fw-medium">Occupation</label>
+                    <label className="form-label fw-medium">Occupation *</label>
                     <select className="form-select" value={occupation} onChange={(e) => setOccupation(e.target.value)}>
                       <option value="">Select Occupation</option>
                       <option value="Government Workers">Government Workers</option>
@@ -443,7 +422,7 @@ if (!emailRegex.test(email)) {
 
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
-                    <label className="form-label fw-medium">Select Region</label>
+                    <label className="form-label fw-medium">Select Region *</label>
                     <select className="form-select" value={region} onChange={(e) => setRegion(e.target.value)}>
                       <option value="">Select Region</option>
                       <option value="North Central">North Central</option>
@@ -456,7 +435,7 @@ if (!emailRegex.test(email)) {
                     </select>
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label fw-medium">Date of Birth</label>
+                    <label className="form-label fw-medium">Date of Birth *</label>
                     <input type="date" className="form-control" value={dob} onChange={(e) => setDob(e.target.value)}/>
                   </div>
                 </div>
@@ -464,11 +443,11 @@ if (!emailRegex.test(email)) {
                 
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
-                    <label className="form-label fw-medium">Phone Number</label>
+                    <label className="form-label fw-medium">Phone Number *</label>
                     <input className="form-control" placeholder="11-digit phone number" value={phone} onChange={(e) => handleNumericInput(e.target.value, setPhone)} />
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label fw-medium">National Identity Number(NIN)</label>
+                    <label className="form-label fw-medium">National Identity Number(NIN) *</label>
                     <input className="form-control" placeholder="11-digit NIN" value={nin} onChange={(e) => handleNumericInput(e.target.value, setNin)} />
                   </div>
                 </div>
@@ -504,7 +483,7 @@ if (!emailRegex.test(email)) {
         className="form-control" 
         placeholder="Enter Maiden Name" 
         value={maidenName} 
-        onChange={(e) => setMaidenName(e.target.value)} 
+        onChange={handleNameChange(setMaidenName)} 
       />
     </div>
   </div>
@@ -512,7 +491,7 @@ if (!emailRegex.test(email)) {
 
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
-                    <label className="form-label fw-medium">Do you reside in Nigeria?</label>
+                    <label className="form-label fw-medium">Do you reside in Nigeria? *</label>
                     <select className="form-select" value={isCitizen} onChange={(e) => { setIsCitizen(e.target.value); setState(""); setLga(""); setWard(""); setCountry(""); }}>
                       <option value="">Do you reside in Nigeria?</option>
                       <option value="Yes">Yes</option>
@@ -520,9 +499,9 @@ if (!emailRegex.test(email)) {
                     </select>
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label fw-medium">Do you have a voters card?</label>
+                    <label className="form-label fw-medium">Do you have voters Identification Number(VIN)? *</label>
                     <select className="form-select" value={isVoters} onChange={(e) => setVoters(e.target.value)}>
-                      <option value="">Do you have a voters card?</option>
+                      <option value="">Do you have a voters identification number?</option>
                       <option value="Yes">Yes</option>
                       <option value="No">No</option>
                     </select>
@@ -532,8 +511,8 @@ if (!emailRegex.test(email)) {
                 {isVoters === "Yes" && (
                   <div className="row g-3 mb-3">
                     <div className="col-md-6">
-                      <label className="form-label fw-medium">Voter's Card Number</label>
-                      <input className="form-control" placeholder="11-digit Voter's Card No." value={votersCardNo} onChange={(e) => handleNumericInput(e.target.value, setVotersCardNo)} />
+                      <label className="form-label fw-medium">Voter's Identification Number</label>
+                      <input maxLength={20} className="form-control" placeholder="Enter voter's identification number" value={votersCardNo} onChange={(e) => setVotersCardNo(e.target.value)} />
                     </div>
                   </div>
                 )}
@@ -543,7 +522,7 @@ if (!emailRegex.test(email)) {
   <>
     <div className="row g-3 mb-3">
       <div className="col-md-4">
-        <label className="form-label fw-medium">State of Origin</label>
+        <label className="form-label fw-medium">State of Residence *</label>
         <select className="form-select" value={state} onChange={(e) => { setState(e.target.value); setLga(""); setWard(""); }} required>
           <option value="">{loadingStates ? "Loading..." : "Select State"}</option>
           {states.map((s) => (<option key={s} value={s}>{s}</option>))}
@@ -591,16 +570,16 @@ if (!emailRegex.test(email)) {
 )}
                 <div className="row g-3 mb-3">
                   <div className="col-md-6">
-                    <label className="form-label fw-medium">Country of Residence</label>
+                    <label className="form-label fw-medium">Country of Residence *</label>
                     <select className="form-select" value={isNigeria} onChange={(e) => setIsNigeria(e.target.value)} required>
-                      <option value="">Select country of residence</option>
+                      <option value="">Select Country</option>
                       <option value="Nigeria">Nigeria</option>
                       <option value="Other Country">Other Country</option>
                     </select>
                   </div>
                   {isNigeria === "Nigeria" && (
   <div className="col-md-6">
-    <label className="form-label fw-medium">State of Residence</label>
+    <label className="form-label fw-medium">State of Origin *</label>
     <select 
       className="form-select" 
       value={residenceState} 
@@ -618,7 +597,7 @@ if (!emailRegex.test(email)) {
 )}
                   {isNigeria === "Other Country" && (
                     <div className="col-md-6">
-                      <label className="form-label fw-medium">Country Name</label>
+                      <label className="form-label fw-medium">Country Name *</label>
                       <select className="form-select" value={country} onChange={(e) => setCountry(e.target.value)} required>
                         <option value="">Select Country</option>
                         <option value="Ghana">Ghana</option>
@@ -632,7 +611,7 @@ if (!emailRegex.test(email)) {
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label fw-bold">Upload Passport Photograph</label>
+                  <label className="form-label fw-bold">Upload Passport Photograph *</label>
                   <input type="file" className="form-control" accept="image/*" onChange={(e) => setPassportFile(e.target.files[0])} required />
                 </div>
 
@@ -652,7 +631,7 @@ if (!emailRegex.test(email)) {
               // Trigger the modal instead of navigating
               onClick={() => setShowTermsModal(true)} 
             >
-              Terms and Conditions
+              Terms and Conditions *
             </span>{" "}
             and Privacy Policy.
           </label>

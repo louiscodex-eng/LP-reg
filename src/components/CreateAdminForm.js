@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { getStates, getLgas, getWards } from "../APIs/locationservice";
+import { Eye, EyeOff } from "lucide-react";
 
 const CreateAdminForm = ({ onSuccess }) => {
   const [loading, setLoading] = useState(false);
@@ -17,7 +18,9 @@ const CreateAdminForm = ({ onSuccess }) => {
   const [states, setStates] = useState([]);
   const [lgas, setLgas] = useState([]);
   const [wards, setWards] = useState([]);
-
+// --- ADD THESE TWO LINES ---
+  const [showPassword, setShowPassword] = useState(false);
+  const togglePasswordVisibility = () => setShowPassword(!showPassword);
   // Load States for State/LGA/Ward levels
   useEffect(() => {
     getStates().then(setStates).catch(() => toast.error("Error loading states"));
@@ -49,8 +52,8 @@ const CreateAdminForm = ({ onSuccess }) => {
     const token = localStorage.getItem("token");
 
     const payload = {
-      Username: formData.username,
-      Password: formData.password,
+      Username: formData.username.trim(),
+      Password: formData.password.trim(),
       RoleLevel: formData.roleLevel,
       AccessType: formData.accessType,
       State: ["State", "LGA", "Ward"].includes(formData.roleLevel) ? formData.state : null,
@@ -59,7 +62,8 @@ const CreateAdminForm = ({ onSuccess }) => {
     };
 
     try {
-      const response = await fetch("http://84.247.165.61/LabourParty/api/Admin/create-admin", {
+       const response = await fetch("https://registration.labourpartynigeria.org.ng:8443/api/Admin/create-admin", {
+       //const response = await fetch("https://localhost:44332/api/Admin/create-admin", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -81,7 +85,7 @@ const CreateAdminForm = ({ onSuccess }) => {
         toast.error(data.message || "Failed to create admin");
       }
     } catch (error) {
-      toast.error("Network error. Please try again.");
+      toast.error("Something went wrong,Please contact site Admin.");
     } finally {
       setLoading(false);
     }
@@ -93,9 +97,31 @@ const CreateAdminForm = ({ onSuccess }) => {
         <label className="form-label small fw-bold">USERNAME</label>
         <input name="username" type="text" className="form-control" onChange={handleChange} required />
       </div>
+   {/* PASSWORD SECTION WITH EYE ICON */}
       <div className="col-md-6">
         <label className="form-label small fw-bold">PASSWORD</label>
-        <input name="password" type="password" className="form-control" onChange={handleChange} required />
+        <div className="input-group">
+          <input
+            name="password"
+            type={showPassword ? "text" : "password"} // Toggle type
+            className="form-control"
+            onChange={handleChange}
+            required
+            style={{ borderRight: "none" }} // Optional: cleaner look with the button
+          />
+          <button
+            className="btn btn-outline-secondary"
+            type="button"
+            onClick={togglePasswordVisibility}
+            style={{ 
+              borderLeft: "none", 
+              backgroundColor: "transparent", 
+              borderColor: "#dee2e6" 
+            }}
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        </div>
       </div>
 
       <div className="col-md-6">
